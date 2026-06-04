@@ -276,24 +276,29 @@ function renderHome(projects, { overlayKind = null, overlayProject = null, overl
     ? `<section class="banner-grid">${sorted
         .map((p) => {
           const plainThumb = !p.bannerPath ? ` ${BANNER_PLAIN_CLASS}` : "";
+          const urlRow = p.url?.trim()
+            ? `<ul class="banner-card-meta banner-card-meta-url">
+                <li class="banner-card-url-item">
+                  <span class="meta-label">URL</span>
+                  <span class="banner-card-url" role="link" tabindex="0" data-action="open-url" data-url="${escAttr(p.url.trim())}">${escText(formatUrlLabel(p.url.trim()))}</span>
+                </li>
+              </ul>`
+            : "";
           return `<article class="banner-card">
-            <button type="button" class="banner-thumbnail banner-thumbnail-btn${plainThumb}" data-action="open-detail" data-project-id="${p.id}" ${bannerStyle(p)} aria-label="${p.title} 상세 보기">
-              <div class="banner-thumb-content">
-                <h3 class="banner-thumb-title">${p.title}</h3>
-                <ul class="banner-thumb-meta">
+            <button type="button" class="banner-thumbnail banner-thumbnail-btn${plainThumb}" data-action="open-detail" data-project-id="${p.id}" ${bannerStyle(p)} aria-label="${escAttr(p.title)} 배너 — 상세 보기"></button>
+            <div class="banner-card-body">
+              <button type="button" class="banner-card-detail-trigger" data-action="open-detail" data-project-id="${p.id}">
+                <h3 class="banner-card-title">${escText(p.title)}</h3>
+                <ul class="banner-card-meta">
                   <li><span class="meta-label">버전</span> v${p.version || "1.0"}</li>
                   <li><span class="meta-label">작성자</span> ${escText(p.author)}</li>
                   <li><span class="meta-label">등록일</span> ${formatDate(p.createdAt)}</li>
-                  ${
-                    p.url?.trim()
-                      ? `<li class="banner-thumb-url-item"><span class="meta-label">URL</span><span class="banner-thumb-url" role="link" tabindex="0" data-action="open-url" data-url="${escAttr(p.url.trim())}">${escText(formatUrlLabel(p.url.trim()))}</span></li>`
-                      : ""
-                  }
                 </ul>
+              </button>
+              ${urlRow}
+              <div class="banner-card-footer">
+                <button type="button" class="comment-chip" data-action="open-comments" data-project-id="${p.id}"><span class="comment-chip-icon">💬</span><span>${(p.comments || []).length}</span></button>
               </div>
-            </button>
-            <div class="banner-footer">
-              <button class="comment-chip" data-action="open-comments" data-project-id="${p.id}"><span class="comment-chip-icon">💬</span><span>${(p.comments || []).length}</span></button>
             </div>
           </article>`;
         })
