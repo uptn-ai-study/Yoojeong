@@ -49,7 +49,8 @@ function sanitizeProjects(projects) {
 async function readProjectsBlob() {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   const meta = await head(PROJECTS_BLOB_PATH, { token });
-  const res = await fetch(meta.url);
+  const bust = meta.url.includes("?") ? "&" : "?";
+  const res = await fetch(`${meta.url}${bust}t=${Date.now()}`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to load projects blob");
   const parsed = await res.json();
   return Array.isArray(parsed) ? parsed : [];

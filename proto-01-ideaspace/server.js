@@ -238,7 +238,7 @@ app.post(
     };
     project.comments.push(comment);
     await writeProjects(projects);
-    res.status(201).json({ comment });
+    res.status(201).json({ comment, project: projectOut(project) });
   })
 );
 

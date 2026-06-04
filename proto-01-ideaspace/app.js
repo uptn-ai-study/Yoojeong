@@ -353,12 +353,23 @@ function renderNotFound() {
   return renderLayout(`<main><h2 class="page-title">아이디어를 찾을 수 없습니다</h2><button class="primary-button" data-action="go-home"><span class="icon">←</span><span>메인으로</span></button></main>`);
 }
 
-async function render() {
+async function refreshCommentsOverlay(projectId, project) {
+  const app = document.getElementById("app");
+  const listData = await api("/api/projects");
+  app.innerHTML = renderHome(listData.projects || [], {
+    overlayKind: "comments",
+    overlayProject: project,
+    commentsOverlay: true,
+  });
+  attachHandlers();
+}
+
+async function render({ skipOverlayLoading = false } = {}) {
   const app = document.getElementById("app");
   const route = getRoute();
   const overlayMeta = overlayRouteMeta(route);
 
-  if (overlayMeta) {
+  if (overlayMeta && !skipOverlayLoading) {
     app.innerHTML = renderHome([], {
       overlayKind: overlayMeta.overlayKind,
       overlayLoading: true,
@@ -465,19 +476,19 @@ function attachHandlers() {
         uiState.editingComment = null;
       }
       showToast("코멘트를 삭제했습니다.");
-      return render();
+      return render({ skipOverlayLoading: true });
     }
 
     if (action === "edit-comment") {
       const commentBodyEl = el.closest(".comment-item")?.querySelector(".comment-body");
       const currentBody = commentBodyEl ? commentBodyEl.textContent.trim() : "";
       uiState.editingComment = { projectId, commentId, body: currentBody };
-      return render();
+      return render({ skipOverlayLoading: true });
     }
 
     if (action === "cancel-comment-edit") {
       uiState.editingComment = null;
-      return render();
+      return render({ skipOverlayLoading: true });
     }
 
     if (action === "save-comment-edit") {
@@ -490,7 +501,7 @@ function attachHandlers() {
       });
       uiState.editingComment = null;
       showToast("코멘트를 수정했습니다.");
-      return render();
+      return render({ skipOverlayLoading: true });
     }
 
   });
@@ -507,13 +518,22 @@ async function submitComment(projectId) {
   const body = bodyEl.value.trim();
   const author = authorEl?.value.trim() || "";
   if (!body) return showToast("코멘트를 입력해 주세요.");
-  await api(`/api/projects/${encodeURIComponent(projectId)}/comments`, {
+  const data = await api(`/api/projects/${encodeURIComponent(projectId)}/comments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ body, author }),
   });
   showToast("코멘트를 등록했습니다.");
-  return render();
+  const route = getRoute();
+  if (route.name === "comments" && route.id === projectId) {
+    let project = data.project;
+    if (!project) {
+      const fresh = await api(`/api/projects/${encodeURIComponent(projectId)}?_=${Date.now()}`);
+      project = fresh.project;
+    }
+    if (project) return refreshCommentsOverlay(projectId, project);
+  }
+  return render({ skipOverlayLoading: true });
 }
 
 function bindCommentComposer() {
