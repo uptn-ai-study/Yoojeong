@@ -271,10 +271,23 @@ app.delete("/api/projects/:id/comments/:commentId", (req, res) => {
   res.json({ ok: true });
 });
 
+function sendPublicFile(res, fileName, contentType) {
+  const abs = path.join(ROOT, fileName);
+  if (!fs.existsSync(abs)) return res.status(404).send("Not found");
+  if (contentType) res.type(contentType);
+  return res.sendFile(abs);
+}
+
+app.get("/app.js", (req, res) => sendPublicFile(res, "app.js", "application/javascript"));
+app.get("/styles.css", (req, res) => sendPublicFile(res, "styles.css", "text/css"));
+app.get("/bg_01.png", (req, res) => sendPublicFile(res, "bg_01.png", "image/png"));
+app.get("/", (req, res) => sendPublicFile(res, "index.html", "text/html"));
+
 app.use(express.static(ROOT));
 
 app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(ROOT, "index.html"));
+  if (path.extname(req.path)) return res.status(404).send("Not found");
+  return sendPublicFile(res, "index.html", "text/html");
 });
 
 module.exports = app;
