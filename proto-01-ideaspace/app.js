@@ -372,11 +372,21 @@ function renderNotFound() {
 
 async function refreshCommentsOverlay(projectId, project) {
   const app = document.getElementById("app");
-  const listData = await api("/api/projects");
+  const listData = await api(`/api/projects?_=${Date.now()}`);
   app.innerHTML = renderHome(listData.projects || [], {
     overlayKind: "comments",
     overlayProject: project,
     commentsOverlay: true,
+  });
+  attachHandlers();
+}
+
+async function refreshDetailOverlay(project) {
+  const app = document.getElementById("app");
+  const listData = await api(`/api/projects?_=${Date.now()}`);
+  app.innerHTML = renderHome(listData.projects || [], {
+    overlayKind: "detail",
+    overlayProject: project,
   });
   attachHandlers();
 }
@@ -399,8 +409,8 @@ async function render({ skipOverlayLoading = false } = {}) {
       const data = await api("/api/projects");
       app.innerHTML = renderHome(data.projects || [], { overlayKind: "new" });
     } else if (route.name === "detail") {
-      const listData = await api("/api/projects");
-      const detailData = await api(`/api/projects/${encodeURIComponent(route.id)}`);
+      const listData = await api(`/api/projects?_=${Date.now()}`);
+      const detailData = await api(`/api/projects/${encodeURIComponent(route.id)}?_=${Date.now()}`);
       if (!detailData.project) {
         app.innerHTML = renderHome(listData.projects || []);
         showToast("아이디어를 찾을 수 없습니다.");
@@ -411,8 +421,8 @@ async function render({ skipOverlayLoading = false } = {}) {
         });
       }
     } else if (route.name === "comments") {
-      const listData = await api("/api/projects");
-      const commentData = await api(`/api/projects/${encodeURIComponent(route.id)}`);
+      const listData = await api(`/api/projects?_=${Date.now()}`);
+      const commentData = await api(`/api/projects/${encodeURIComponent(route.id)}?_=${Date.now()}`);
       if (!commentData.project) {
         app.innerHTML = renderHome(listData.projects || []);
         showToast("아이디어를 찾을 수 없습니다.");
@@ -590,17 +600,25 @@ async function saveEditProject(form) {
   }
 
   try {
-    await api(`/api/projects/${encodeURIComponent(projectId)}`, {
+    const result = await api(`/api/projects/${encodeURIComponent(projectId)}`, {
       method: "PATCH",
       body: data,
     });
     showToast("저장되었습니다.");
     const route = getRoute();
+    let project = result.project;
+    if (!project) {
+      const fresh = await api(`/api/projects/${encodeURIComponent(projectId)}?_=${Date.now()}`);
+      project = fresh.project;
+    }
+    if (route.name === "detail" && route.id === projectId && project) {
+      return refreshDetailOverlay(project);
+    }
     if (route.name !== "detail" || route.id !== projectId) {
       navigate(`#/project/${encodeURIComponent(projectId)}`);
       return;
     }
-    await render();
+    await render({ skipOverlayLoading: true });
   } catch (err) {
     showToast(err.message);
   }
