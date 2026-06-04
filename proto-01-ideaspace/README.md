@@ -25,7 +25,15 @@ npm run dev
 | Output Directory | (비움) |
 | Install Command | `npm install` |
 
-> Vercel 서버리스 환경에서는 `data/projects.json`·`uploads/` 변경이 재배포·콜드스타트 후 초기화될 수 있습니다. 데모·프로토타입 용도로 사용하세요.
+### Vercel Blob (필수)
+
+프로덕션에서 **아이디어·배너·파일 저장**이 유지되려면 Vercel 프로젝트에 Blob 스토어를 연결해야 합니다.
+
+1. [Vercel Dashboard](https://vercel.com) → 프로젝트 `yoojeong-ideaspace` → **Storage** → **Create Database** → **Blob**
+2. 프로젝트에 연결하면 `BLOB_READ_WRITE_TOKEN` 환경 변수가 자동 설정됩니다.
+3. **Redeploy** 후 등록·수정 내용이 유지됩니다.
+
+Blob이 없으면 서버리스 환경에서 업로드·저장이 동작하지 않습니다.
 
 ## 구성
 

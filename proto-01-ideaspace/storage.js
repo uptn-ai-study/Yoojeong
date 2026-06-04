@@ -1,0 +1,102 @@
+const fs = require("fs");
+const path = require("path");
+const { put, head } = require("@vercel/blob");
+
+const ROOT = __dirname;
+const DATA_DIR = path.join(ROOT, "data");
+const UPLOAD_DIR = path.join(ROOT, "uploads");
+const DB_FILE = path.join(DATA_DIR, "projects.json");
+const PROJECTS_BLOB_PATH = "ideaspace/projects.json";
+
+function useBlob() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+}
+
+function readProjectsDisk() {
+  try {
+    const raw = fs.readFileSync(DB_FILE, "utf8");
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+async function readProjectsBlob() {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const meta = await head(PROJECTS_BLOB_PATH, { token });
+  const res = await fetch(meta.url);
+  if (!res.ok) throw new Error("Failed to load projects blob");
+  const parsed = await res.json();
+  return Array.isArray(parsed) ? parsed : [];
+}
+
+async function readProjects() {
+  if (!useBlob()) return readProjectsDisk();
+  try {
+    return await readProjectsBlob();
+  } catch {
+    const seed = readProjectsDisk();
+    if (seed.length) await writeProjects(seed);
+    return seed;
+  }
+}
+
+async function writeProjects(projects) {
+  if (!useBlob()) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(DB_FILE, JSON.stringify(projects, null, 2), "utf8");
+    return;
+  }
+  await put(PROJECTS_BLOB_PATH, JSON.stringify(projects), {
+    access: "public",
+    contentType: "application/json",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    token: process.env.BLOB_READ_WRITE_TOKEN,
+  });
+}
+
+async function storeUpload(file) {
+  if (!file) return { filePath: "", fileName: "" };
+
+  if (useBlob() && file.buffer) {
+    const ext = path.extname(file.originalname || "");
+    const key = `ideaspace/uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+    const blob = await put(key, file.buffer, {
+      access: "public",
+      contentType: file.mimetype || "application/octet-stream",
+      addRandomSuffix: false,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    });
+    return { filePath: blob.url, fileName: file.originalname || "" };
+  }
+
+  return {
+    filePath: path.posix.join("uploads", path.basename(file.filename)),
+    fileName: file.originalname || "",
+  };
+}
+
+function removeLocalFile(relativePath) {
+  if (!relativePath || /^https?:\/\//i.test(relativePath)) return;
+  const abs = path.join(ROOT, relativePath);
+  if (fs.existsSync(abs)) fs.unlinkSync(abs);
+}
+
+function ensureLocalDirs() {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  if (!fs.existsSync(DB_FILE)) fs.writeFileSync(DB_FILE, "[]", "utf8");
+}
+
+module.exports = {
+  ROOT,
+  UPLOAD_DIR,
+  useBlob,
+  readProjects,
+  writeProjects,
+  storeUpload,
+  removeLocalFile,
+  ensureLocalDirs,
+};

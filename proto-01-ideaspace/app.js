@@ -88,8 +88,10 @@ async function api(path, options = {}) {
   return body;
 }
 
-function fileUrl(path) {
-  return path ? `/${path.replace(/^\/+/, "")}` : "";
+function fileUrl(filePath) {
+  if (!filePath) return "";
+  if (/^https?:\/\//i.test(filePath)) return filePath;
+  return `/${filePath.replace(/^\/+/, "")}`;
 }
 
 const DEFAULT_BANNER = "/bg_01.png";

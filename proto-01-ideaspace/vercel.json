@@ -2,7 +2,7 @@
   "version": 2,
   "functions": {
     "server.js": {
-      "includeFiles": "{app.js,styles.css,index.html,bg_01.png,data/**}"
+      "includeFiles": "{app.js,styles.css,index.html,bg_01.png,data/**,storage.js}"
     }
   },
   "rewrites": [{ "source": "/(.*)", "destination": "/server.js" }]
