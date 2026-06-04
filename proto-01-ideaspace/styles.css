@@ -578,6 +578,22 @@ header {
   font-size: 11px;
 }
 
+.banner-thumb-url-item {
+  max-width: 100%;
+}
+
+.banner-thumb-url {
+  color: #e8f0ff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  word-break: break-all;
+}
+
+.banner-thumb-url:hover {
+  color: #ffffff;
+}
+
 .banner-meta-strip {
   position: absolute;
   left: 14px;
@@ -980,6 +996,8 @@ header {
 .comment-body {
   font-size: 13px;
   line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .comment-empty {

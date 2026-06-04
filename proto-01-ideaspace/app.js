@@ -114,6 +114,18 @@ function escText(value) {
     .replace(/</g, "&lt;");
 }
 
+function formatUrlLabel(url) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "");
+    const path = parsed.pathname === "/" ? "" : parsed.pathname;
+    const label = `${host}${path}`;
+    return label.length > 36 ? `${label.slice(0, 36)}…` : label;
+  } catch {
+    return url.length > 36 ? `${url.slice(0, 36)}…` : url;
+  }
+}
+
 function renderLayout(content, { home = false, formPage = false, hideAddButton = false, showHeaderClose = false, commentsOverlay = false } = {}) {
   let header = "";
   if (home) {
@@ -266,8 +278,13 @@ function renderHome(projects, { overlayKind = null, overlayProject = null, overl
                 <h3 class="banner-thumb-title">${p.title}</h3>
                 <ul class="banner-thumb-meta">
                   <li><span class="meta-label">버전</span> v${p.version || "1.0"}</li>
-                  <li><span class="meta-label">작성자</span> ${p.author}</li>
+                  <li><span class="meta-label">작성자</span> ${escText(p.author)}</li>
                   <li><span class="meta-label">등록일</span> ${formatDate(p.createdAt)}</li>
+                  ${
+                    p.url?.trim()
+                      ? `<li class="banner-thumb-url-item"><span class="meta-label">URL</span><span class="banner-thumb-url" role="link" tabindex="0" data-action="open-url" data-url="${escAttr(p.url.trim())}">${escText(formatUrlLabel(p.url.trim()))}</span></li>`
+                      : ""
+                  }
                 </ul>
               </div>
             </button>
@@ -329,7 +346,7 @@ function renderCommentList(project) {
       <div class="comment-compose-footer">
         <input id="commentAuthor" class="input comment-compose-author" placeholder="이름 (선택)" />
         <div class="comment-compose-actions">
-          <span class="comment-compose-hint">Cmd+Enter</span>
+          <span class="comment-compose-hint">Enter 줄바꿈 · Cmd+Enter 등록</span>
           <button type="button" class="primary-button comment-compose-submit" data-action="submit-comment" data-project-id="${project.id}">
             <span class="icon">✔</span><span>등록</span>
           </button>
@@ -440,6 +457,12 @@ function attachHandlers() {
     if (action === "open-detail") return navigate(`#/project/${encodeURIComponent(projectId)}`);
     if (action === "open-comments") return navigate(`#/project/${encodeURIComponent(projectId)}/comments`);
 
+    if (action === "open-url") {
+      const url = el.dataset.url;
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     if (action === "submit-comment") {
       try {
         await submitComment(projectId);
@@ -481,7 +504,7 @@ function attachHandlers() {
 
     if (action === "edit-comment") {
       const commentBodyEl = el.closest(".comment-item")?.querySelector(".comment-body");
-      const currentBody = commentBodyEl ? commentBodyEl.textContent.trim() : "";
+      const currentBody = commentBodyEl ? commentBodyEl.textContent.replace(/\r\n/g, "\n") : "";
       uiState.editingComment = { projectId, commentId, body: currentBody };
       return render({ skipOverlayLoading: true });
     }
