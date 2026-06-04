@@ -13,6 +13,8 @@ npm run dev
 
 ## Vercel 배포
 
+**프로덕션 URL:** https://yoojeong-ideaspace.vercel.app
+
 저장소 [uptn-ai-study/Yoojeong](https://github.com/uptn-ai-study/Yoojeong) 연결 시 **Root Directory**를 `proto-01-ideaspace`로 지정합니다.
 
 | 설정 | 값 |
