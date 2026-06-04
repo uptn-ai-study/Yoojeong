@@ -94,11 +94,14 @@ function fileUrl(filePath) {
   return `/${filePath.replace(/^\/+/, "")}`;
 }
 
-const DEFAULT_BANNER = "/bg_01.png";
+const BANNER_PLAIN_CLASS = "banner-thumbnail--plain";
 
 function bannerStyle(project) {
-  const url = project.bannerPath ? fileUrl(project.bannerPath) : DEFAULT_BANNER;
-  return `style="background-image:url('${url.replace(/'/g, "%27")}')"`;
+  if (project.bannerPath) {
+    const url = fileUrl(project.bannerPath);
+    return `style="background-image:url('${url.replace(/'/g, "%27")}')"`;
+  }
+  return `style="background-color:rgb(245, 240, 230)"`;
 }
 
 function escAttr(value) {
@@ -234,7 +237,7 @@ function renderFormOverlay() {
 function renderDetailOverlay(project) {
   const bannerPreview = project.bannerPath
     ? `<img src="${fileUrl(project.bannerPath)}" alt="배너 미리보기" />`
-    : `<img src="${DEFAULT_BANNER}" alt="기본 배너" />`;
+    : `<div class="banner-preview-plain" aria-hidden="true">기본 배너</div>`;
   const fileHint = project.filePath
     ? `<div class="hint">현재 파일: <a href="${fileUrl(project.filePath)}" target="_blank">${project.fileName || "다운로드"}</a> (새 파일 선택 시 교체됩니다)</div>`
     : `<div class="hint">등록된 파일이 없습니다. 새 파일을 선택해 주세요.</div>`;
@@ -272,8 +275,9 @@ function renderHome(projects, { overlayKind = null, overlayProject = null, overl
   const grid = sorted.length
     ? `<section class="banner-grid">${sorted
         .map((p) => {
+          const plainThumb = !p.bannerPath ? ` ${BANNER_PLAIN_CLASS}` : "";
           return `<article class="banner-card">
-            <button type="button" class="banner-thumbnail banner-thumbnail-btn" data-action="open-detail" data-project-id="${p.id}" ${bannerStyle(p)} aria-label="${p.title} 상세 보기">
+            <button type="button" class="banner-thumbnail banner-thumbnail-btn${plainThumb}" data-action="open-detail" data-project-id="${p.id}" ${bannerStyle(p)} aria-label="${p.title} 상세 보기">
               <div class="banner-thumb-content">
                 <h3 class="banner-thumb-title">${p.title}</h3>
                 <ul class="banner-thumb-meta">
