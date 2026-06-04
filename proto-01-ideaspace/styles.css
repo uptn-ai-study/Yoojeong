@@ -283,16 +283,6 @@ header {
   pointer-events: auto;
 }
 
-.page-comments-overlay .home-hero,
-.page-comments-overlay .home-projects-backdrop {
-  visibility: hidden;
-}
-
-.page-comments-overlay.page-overlay-open .home-hero,
-.page-comments-overlay.page-overlay-open .home-projects-backdrop {
-  filter: none;
-}
-
 .home-main {
   display: flex;
   flex-direction: column;
@@ -365,18 +355,46 @@ header {
 }
 
 .page-overlay-open .home-header {
-  opacity: 0.35;
+  visibility: hidden;
+  height: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  opacity: 0;
   pointer-events: none;
 }
 
 .page-comments-overlay.page-overlay-open .home-header {
+  visibility: visible;
+  height: auto;
+  min-height: unset;
+  padding: 22px 28px 0;
   opacity: 1;
   pointer-events: auto;
 }
 
 .page-overlay-open .home-hero,
 .page-overlay-open .home-projects-backdrop {
-  filter: blur(1px) brightness(0.72);
+  visibility: hidden;
+  height: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  filter: none;
+}
+
+.overlay-loading {
+  display: grid;
+  place-items: center;
+  min-height: 200px;
+  padding: 40px 20px;
+}
+
+.overlay-loading-text {
+  font-size: 14px;
+  color: var(--text-muted);
 }
 
 .form-overlay {

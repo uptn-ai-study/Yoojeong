@@ -168,6 +168,21 @@ function renderHomeHero() {
   </section>`;
 }
 
+function overlayRouteMeta(route) {
+  if (route.name === "new") return { overlayKind: "new", commentsOverlay: false };
+  if (route.name === "detail") return { overlayKind: "detail", commentsOverlay: false };
+  if (route.name === "comments") return { overlayKind: "comments", commentsOverlay: true };
+  return null;
+}
+
+function renderOverlayPlaceholder(overlayKind) {
+  const labels = { new: "새 아이디어 등록", detail: "아이디어 상세", comments: "코멘트" };
+  const body = `<div class="overlay-loading" aria-busy="true"><span class="overlay-loading-text">불러오는 중…</span></div>`;
+  return renderOverlayShell(labels[overlayKind] || "로딩", body, {
+    showCloseButton: overlayKind === "comments",
+  });
+}
+
 function renderOverlayShell(ariaLabel, bodyHtml, { showCloseButton = true } = {}) {
   const closeBtn = showCloseButton
     ? `<button type="button" class="close-toggle form-overlay-close" data-action="go-home" aria-label="닫기">×</button>`
@@ -240,7 +255,7 @@ function renderDetailOverlay(project) {
   return renderOverlayShell("아이디어 상세", formHtml, { showCloseButton: false });
 }
 
-function renderHome(projects, { overlayKind = null, overlayProject = null } = {}) {
+function renderHome(projects, { overlayKind = null, overlayProject = null, overlayLoading = false } = {}) {
   const sorted = [...projects].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   const grid = sorted.length
     ? `<section class="banner-grid">${sorted
@@ -265,7 +280,8 @@ function renderHome(projects, { overlayKind = null, overlayProject = null } = {}
     : "";
 
   let overlayHtml = "";
-  if (overlayKind === "new") overlayHtml = renderFormOverlay();
+  if (overlayLoading && overlayKind) overlayHtml = renderOverlayPlaceholder(overlayKind);
+  else if (overlayKind === "new") overlayHtml = renderFormOverlay();
   else if (overlayKind === "detail" && overlayProject) overlayHtml = renderDetailOverlay(overlayProject);
   else if (overlayKind === "comments" && overlayProject) overlayHtml = renderCommentsOverlay(overlayProject);
 
@@ -339,8 +355,17 @@ function renderNotFound() {
 
 async function render() {
   const app = document.getElementById("app");
-  app.innerHTML = renderLayout(`<main><p class="page-description">불러오는 중...</p></main>`);
   const route = getRoute();
+  const overlayMeta = overlayRouteMeta(route);
+
+  if (overlayMeta) {
+    app.innerHTML = renderHome([], {
+      overlayKind: overlayMeta.overlayKind,
+      overlayLoading: true,
+      commentsOverlay: overlayMeta.commentsOverlay,
+    });
+  }
+
   try {
     if (route.name === "new") {
       const data = await api("/api/projects");
@@ -374,7 +399,16 @@ async function render() {
       app.innerHTML = renderHome(data.projects || []);
     }
   } catch (err) {
-    app.innerHTML = renderLayout(`<main><p class="danger-text">${err.message}</p></main>`);
+    if (overlayMeta) {
+      app.innerHTML = renderHome([], {
+        overlayKind: overlayMeta.overlayKind,
+        overlayLoading: true,
+        commentsOverlay: overlayMeta.commentsOverlay,
+      });
+      showToast(err.message);
+    } else {
+      app.innerHTML = renderLayout(`<main><p class="danger-text">${err.message}</p></main>`, { home: true });
+    }
   }
   attachHandlers();
 }
