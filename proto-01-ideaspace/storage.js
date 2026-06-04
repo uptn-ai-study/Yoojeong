@@ -22,6 +22,30 @@ function readProjectsDisk() {
   }
 }
 
+function sanitizeProjects(projects) {
+  let changed = false;
+  const next = projects.map((p) => {
+    const copy = { ...p };
+    if (copy.bannerPath && !/^https?:\/\//i.test(copy.bannerPath)) {
+      const abs = path.join(ROOT, copy.bannerPath);
+      if (useBlob() || !fs.existsSync(abs)) {
+        copy.bannerPath = "";
+        changed = true;
+      }
+    }
+    if (copy.filePath && !/^https?:\/\//i.test(copy.filePath)) {
+      const abs = path.join(ROOT, copy.filePath);
+      if (useBlob() || !fs.existsSync(abs)) {
+        copy.filePath = "";
+        copy.fileName = copy.fileName || "";
+        changed = true;
+      }
+    }
+    return copy;
+  });
+  return { projects: next, changed };
+}
+
 async function readProjectsBlob() {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   const meta = await head(PROJECTS_BLOB_PATH, { token });
@@ -32,14 +56,20 @@ async function readProjectsBlob() {
 }
 
 async function readProjects() {
-  if (!useBlob()) return readProjectsDisk();
-  try {
-    return await readProjectsBlob();
-  } catch {
-    const seed = readProjectsDisk();
-    if (seed.length) await writeProjects(seed);
-    return seed;
+  let projects;
+  if (!useBlob()) {
+    projects = readProjectsDisk();
+  } else {
+    try {
+      projects = await readProjectsBlob();
+    } catch {
+      projects = readProjectsDisk();
+      if (projects.length) await writeProjects(projects);
+    }
   }
+  const { projects: sanitized, changed } = sanitizeProjects(projects);
+  if (changed) await writeProjects(sanitized);
+  return sanitized;
 }
 
 async function writeProjects(projects) {
