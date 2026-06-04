@@ -4,13 +4,13 @@ function createElement(html) {
   return t.content.firstElementChild;
 }
 
-function showToast(message) {
+function showToast(message, durationMs = 1800) {
   const toast = createElement(`<div class="toast"><span class="toast-dot"></span><span>${message}</span></div>`);
   document.body.appendChild(toast);
   setTimeout(() => {
     toast.style.opacity = "0";
     setTimeout(() => toast.remove(), 220);
-  }, 1800);
+  }, durationMs);
 }
 
 const uiState = {
@@ -604,7 +604,7 @@ async function saveEditProject(form) {
       method: "PATCH",
       body: data,
     });
-    showToast("저장되었습니다.");
+    showToast("저장되었습니다.", 2000);
     const route = getRoute();
     let project = result.project;
     if (!project) {
