@@ -313,19 +313,19 @@ function renderCommentList(project) {
             uiState.editingComment.commentId === c.id;
           const bodyPart = isEditing
             ? `<div class="comment-editor">
-                <textarea class="textarea" id="editCommentBody" maxlength="400">${uiState.editingComment.body}</textarea>
+                <textarea class="textarea comment-edit-input" id="editCommentBody" maxlength="400">${escText(uiState.editingComment.body)}</textarea>
                 <div class="comment-actions">
                   <button data-action="save-comment-edit" data-project-id="${project.id}" data-comment-id="${c.id}" class="primary-button"><span class="icon">✔</span><span>저장</span></button>
                   <button data-action="cancel-comment-edit" class="ghost-button">취소</button>
                 </div>
               </div>`
-            : `<div class="comment-body">${c.body}</div><div class="comment-actions"><button data-action="edit-comment" data-project-id="${project.id}" data-comment-id="${c.id}" class="secondary-link">수정</button><button data-action="delete-comment" data-project-id="${project.id}" data-comment-id="${c.id}" class="ghost-button danger-text">삭제</button></div>`;
+            : `<div class="comment-body">${escText(c.body)}</div><div class="comment-actions"><button data-action="edit-comment" data-project-id="${project.id}" data-comment-id="${c.id}" class="secondary-link">수정</button><button data-action="delete-comment" data-project-id="${project.id}" data-comment-id="${c.id}" class="ghost-button danger-text">삭제</button></div>`;
           return `<div class="comment-item"><div class="comment-meta"><span class="comment-author">${c.author || "익명"}</span><span>·</span><span>${formatDate(c.createdAt)}</span></div>${bodyPart}</div>`;
         })
         .join("")
     : `<div class="comment-empty">아직 코멘트가 없습니다.</div>`;
   const composeBox = `<div class="comment-compose">
-      <textarea id="commentBody" class="textarea comment-compose-input" maxlength="400" placeholder="코멘트를 입력하세요." data-project-id="${project.id}"></textarea>
+      <textarea id="commentBody" class="textarea comment-compose-input" maxlength="400" rows="4" placeholder="코멘트를 입력하세요. Enter로 줄바꿈" data-project-id="${project.id}"></textarea>
       <div class="comment-compose-footer">
         <input id="commentAuthor" class="input comment-compose-author" placeholder="이름 (선택)" />
         <div class="comment-compose-actions">

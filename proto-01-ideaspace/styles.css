@@ -910,9 +910,11 @@ header {
   border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
 
-.comment-compose-input {
-  min-height: 88px;
+.comment-compose-input,
+.comment-edit-input {
+  min-height: 96px;
   resize: vertical;
+  line-height: 1.55;
 }
 
 .comment-compose-footer {
