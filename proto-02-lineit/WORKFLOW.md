@@ -30,6 +30,8 @@ git push origin main
 
 `main`에 push하면 Vercel(Root: `proto-02-lineit`)이 연결돼 있을 때 자동 배포됩니다.
 
+랭킹은 **Supabase** 연결 시 `/api/rankings`로 전역 저장됩니다. ([README.md](./README.md) 참고)
+
 ## 최초 진입 테스트 리셋
 
 브라우저 콘솔:

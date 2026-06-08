@@ -74,7 +74,7 @@ const myRank = computed(() => {
   return idx >= 0 ? idx + 1 : null
 })
 
-onMounted(() => {
+onMounted(async () => {
   if (import.meta.env.DEV) {
     const params = new URLSearchParams(window.location.search)
     if (params.has('reset')) {
@@ -91,7 +91,7 @@ onMounted(() => {
   // 이전 버전에서 이미 아이디가 있던 사용자는 팝업 생략
   if (hadExistingId) markWelcomeSeen()
   daily.refresh()
-  ranking.refresh()
+  await ranking.refresh()
 })
 
 watch(

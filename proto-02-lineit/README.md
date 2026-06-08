@@ -49,11 +49,31 @@ gh repo create line-it --public --source=. --remote=origin --push
 ## Vercel 연동
 
 1. [vercel.com](https://vercel.com) 로그인 → **Add New Project**
-2. GitHub 저장소 `line-it` Import
-3. 설정은 저장소의 `vercel.json` 그대로 사용 (Framework: Vite, Output: `dist`)
-4. **Deploy** → `https://line-it-xxx.vercel.app` 에서 플레이
+2. GitHub 저장소 `uptn-ai-study/Yoojeong` Import
+3. **Root Directory**: `proto-02-lineit`
+4. 설정은 저장소의 `vercel.json` 그대로 사용 (Framework: Vite, Output: `dist`)
+5. **Deploy** → `https://line-it-xxx.vercel.app` 에서 플레이
 
 이후 `main` 브랜치에 push할 때마다 자동 배포됩니다.
+
+### 랭킹 저장 (Supabase)
+
+전역 TOP 10은 `/api/rankings` + **Supabase (PostgreSQL)** 에 저장됩니다. Supabase가 연결되지 않으면 기존처럼 `localStorage`로 동작합니다.
+
+1. [supabase.com](https://supabase.com)에서 프로젝트 생성
+2. **SQL Editor**에서 [supabase/schema.sql](./supabase/schema.sql) 실행
+3. **Project Settings → API**에서 URL과 `service_role` key 복사
+4. Vercel 프로젝트 → **Settings → Environment Variables**
+   - `SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY` (클라이언트에 노출하지 마세요)
+5. **Redeploy**
+
+로컬에서 API 테스트:
+
+```bash
+cp .env.example .env.local   # Supabase 값 붙여넣기
+npx vercel dev
+```
 
 > WebView 앱 번들(`file://`)용 빌드는 Vercel과 별도: `npm run build:native` → [native/README.md](./native/README.md)
 
@@ -64,7 +84,7 @@ gh repo create line-it --public --source=. --remote=origin --push
 - **잉크**: 칸 통과 시 시간 보너스 (일정 시간 후 보드에서 사라짐)
 - **점수**: 완주, 남은 시간, 해밀턴 경로 유연성, 잉크, 레벨 배율
 - **플레이 제한**: 하루 100회 (localStorage)
-- **랭킹**: 로컬 TOP 10 (서버 연동 전)
+- **랭킹**: 전역 TOP 10 (Supabase, 미연결 시 localStorage)
 
 ## 앱 WebView 번들 (iOS + Android)
 

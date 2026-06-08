@@ -1,13 +1,19 @@
 import { computed, ref } from 'vue'
-import { DEMO_RANKINGS } from '../data/demoRankings'
+import {
+  DEMO_RANKINGS,
+  MAX_STORED,
+  TOP_N,
+  sortByScore,
+  upsertScore,
+} from '../../lib/ranking'
+import { fetchRankings, submitRankingScore } from '../services/rankingApi'
 import type { RankingEntry } from '../types/game'
 
 const STORAGE_KEY = 'line-it-rankings'
 const BEST_KEY = 'line-it-best-score'
 const SEEDED_KEY = 'line-it-rankings-seeded'
-const TOP_N = 10
 
-function loadRankings(): RankingEntry[] {
+function loadLocalRankings(): RankingEntry[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) return JSON.parse(raw) as RankingEntry[]
@@ -17,62 +23,73 @@ function loadRankings(): RankingEntry[] {
   return []
 }
 
-function saveRankings(entries: RankingEntry[]): void {
+function saveLocalRankings(entries: RankingEntry[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
 }
 
-function seedIfEmpty(): RankingEntry[] {
-  const existing = loadRankings()
+function seedLocalIfEmpty(): RankingEntry[] {
+  const existing = loadLocalRankings()
   if (existing.length > 0) return existing
   if (localStorage.getItem(SEEDED_KEY)) return existing
 
   localStorage.setItem(SEEDED_KEY, '1')
-  saveRankings([...DEMO_RANKINGS])
+  saveLocalRankings([...DEMO_RANKINGS])
   return [...DEMO_RANKINGS]
 }
 
-function sortByScore(entries: RankingEntry[]): RankingEntry[] {
-  return [...entries].sort((a, b) => b.score - a.score || b.timestamp - a.timestamp)
+function applyMyBest(score: number, current: number): number {
+  if (score <= current) return current
+  localStorage.setItem(BEST_KEY, String(score))
+  return score
 }
 
 export function useRanking() {
-  const rankings = ref<RankingEntry[]>(seedIfEmpty())
+  const rankings = ref<RankingEntry[]>([])
   const myBest = ref(Number(localStorage.getItem(BEST_KEY) || 0))
+  const isOnline = ref(false)
 
   const top10 = computed(() => sortByScore(rankings.value).slice(0, TOP_N))
 
-  function refresh(): void {
-    rankings.value = seedIfEmpty()
+  async function refresh(): Promise<void> {
     myBest.value = Number(localStorage.getItem(BEST_KEY) || 0)
+
+    const remote = await fetchRankings()
+    if (remote) {
+      rankings.value = remote
+      isOnline.value = true
+      return
+    }
+
+    rankings.value = seedLocalIfEmpty()
+    isOnline.value = false
   }
 
   /** 플레이 종료 시 점수 반영 (아이디당 최고 기록만 유지) */
-  function submitScore(id: string, score: number): void {
+  async function submitScore(id: string, score: number): Promise<void> {
     if (!id || score <= 0) return
+
+    const remote = await submitRankingScore(id, score)
+    if (remote) {
+      rankings.value = remote
+      isOnline.value = true
+      const mine = remote.find((e) => e.id === id)
+      if (mine) myBest.value = applyMyBest(mine.score, myBest.value)
+      else myBest.value = applyMyBest(score, myBest.value)
+      return
+    }
 
     const prev = rankings.value.find((e) => e.id === id)
     const bestScore = Math.max(score, prev?.score ?? 0)
-
     if (prev && bestScore === prev.score) return
 
-    const entry: RankingEntry = {
-      id,
-      score: bestScore,
-      timestamp: Date.now(),
-    }
+    const next =
+      upsertScore(rankings.value.length ? rankings.value : seedLocalIfEmpty(), id, score) ??
+      rankings.value
 
-    const next = sortByScore([
-      ...rankings.value.filter((e) => e.id !== id),
-      entry,
-    ]).slice(0, 50)
-
-    rankings.value = next
-    saveRankings(next)
-
-    if (bestScore > myBest.value) {
-      myBest.value = bestScore
-      localStorage.setItem(BEST_KEY, String(bestScore))
-    }
+    rankings.value = next.slice(0, MAX_STORED)
+    saveLocalRankings(rankings.value)
+    isOnline.value = false
+    myBest.value = applyMyBest(bestScore, myBest.value)
   }
 
   function getMyRank(playerId: string): number | null {
@@ -83,6 +100,7 @@ export function useRanking() {
   return {
     top10,
     myBest,
+    isOnline,
     refresh,
     submitScore,
     getMyRank,
