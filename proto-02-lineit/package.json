@@ -1,0 +1,25 @@
+{
+  "name": "line-it",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "npm run validate:levels && vue-tsc -b && vite build",
+    "build:native": "npm run build && node scripts/prepare-native-bundle.mjs",
+    "validate:levels": "node --experimental-strip-types scripts/validate-levels.mjs",
+    "preview": "vite preview --host",
+    "reset:welcome": "open 'http://localhost:5173/?reset=welcome'"
+  },
+  "dependencies": {
+    "vue": "^3.5.34"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.3",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "@vue/tsconfig": "^0.9.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.12",
+    "vue-tsc": "^3.2.8"
+  }
+}

@@ -1,0 +1,9 @@
+<!-- app/src/main/AndroidManifest.xml 안 <application> 블록에 추가 -->
+<activity
+    android:name="com.uptn.lineit.LineItWebActivity"
+    android:exported="false"
+    android:configChanges="orientation|screenSize|keyboardHidden"
+    android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+<!-- 진입 예시 (기존 Activity에서) -->
+<!-- startActivity(Intent(this, LineItWebActivity::class.java)) -->
