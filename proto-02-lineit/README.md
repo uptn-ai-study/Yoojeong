@@ -1,9 +1,7 @@
-# proto-02-lineit
+# Line It
 
-Line It — 한붓 그리기 미로 퍼즐 웹 게임 (Vue 3 + TypeScript).  
+한붓 그리기 퍼즐 웹 게임 (Vue 3 + TypeScript).  
 브라우저·Vercel에서 플레이하고, 이후 UPTNStation iOS/Android WebView에 탑재합니다.
-
-모노레포: [uptn-ai-study/Yoojeong](https://github.com/uptn-ai-study/Yoojeong) · Vercel **Root Directory**: `proto-02-lineit`
 
 ## 로컬에서 보기
 
@@ -28,13 +26,32 @@ npm run preview
 
 → http://localhost:4173 (Vercel 배포와 동일한 정적 빌드)
 
+## GitHub 반영
+
+```bash
+# 최초 1회 (이미 되어 있으면 생략)
+git init
+git add .
+git commit -m "Initial commit: Line It puzzle game"
+
+# GitHub에 빈 저장소 생성 후 (이름 예: line-it)
+git remote add origin https://github.com/<USER>/line-it.git
+git branch -M main
+git push -u origin main
+```
+
+GitHub CLI가 있으면:
+
+```bash
+gh repo create line-it --public --source=. --remote=origin --push
+```
+
 ## Vercel 연동
 
 1. [vercel.com](https://vercel.com) 로그인 → **Add New Project**
-2. GitHub 저장소 [uptn-ai-study/Yoojeong](https://github.com/uptn-ai-study/Yoojeong) Import
-3. **Root Directory**를 `proto-02-lineit`로 지정
-4. Framework: Vite, Output: `dist` (`vercel.json` 참고)
-5. **Deploy**
+2. GitHub 저장소 `line-it` Import
+3. 설정은 저장소의 `vercel.json` 그대로 사용 (Framework: Vite, Output: `dist`)
+4. **Deploy** → `https://line-it-xxx.vercel.app` 에서 플레이
 
 이후 `main` 브랜치에 push할 때마다 자동 배포됩니다.
 

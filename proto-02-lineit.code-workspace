@@ -1,0 +1,11 @@
+{
+  "folders": [
+    {
+      "name": "Line It (proto-02-lineit)",
+      "path": "proto-02-lineit"
+    }
+  ],
+  "settings": {
+    "typescript.tsdk": "proto-02-lineit/node_modules/typescript/lib"
+  }
+}
