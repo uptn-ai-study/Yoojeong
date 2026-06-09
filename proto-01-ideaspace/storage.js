@@ -57,27 +57,19 @@ async function readStreamBody(stream) {
   return Buffer.concat(chunks).toString("utf8");
 }
 
-async function readProjectsBlobViaGet(access) {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  const result = await get(PROJECTS_BLOB_PATH, {
-    access,
-    useCache: false,
-    token,
-  });
-  if (!result || result.statusCode !== 200 || !result.stream) return null;
-  const parsed = JSON.parse(await readStreamBody(result.stream));
-  return Array.isArray(parsed) ? parsed : [];
-}
-
 async function readProjectsBlob() {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
-  for (const access of ["private", "public"]) {
-    try {
-      const projects = await readProjectsBlobViaGet(access);
-      if (projects) return projects;
-    } catch {
-      // try next access mode
+  try {
+    const result = await get(PROJECTS_BLOB_PATH, {
+      access: "public",
+      token,
+    });
+    if (result?.statusCode === 200 && result.stream) {
+      const parsed = JSON.parse(await readStreamBody(result.stream));
+      if (Array.isArray(parsed)) return parsed;
     }
+  } catch {
+    // fall back to head + fetch
   }
 
   const meta = await head(PROJECTS_BLOB_PATH, { token });
@@ -120,7 +112,7 @@ async function writeProjects(projects) {
     return;
   }
   await put(PROJECTS_BLOB_PATH, JSON.stringify(projects), {
-    access: "private",
+    access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
     allowOverwrite: true,
