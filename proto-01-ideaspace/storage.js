@@ -1,12 +1,15 @@
 const fs = require("fs");
 const path = require("path");
-const { put, head } = require("@vercel/blob");
+const { put, head, get } = require("@vercel/blob");
 
 const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, "data");
 const UPLOAD_DIR = path.join(ROOT, "uploads");
 const DB_FILE = path.join(DATA_DIR, "projects.json");
 const PROJECTS_BLOB_PATH = "ideaspace/projects.json";
+const WRITE_CACHE_MS = 15000;
+let lastWrittenProjects = null;
+let lastWrittenAt = 0;
 
 function useBlob() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
@@ -46,8 +49,37 @@ function sanitizeProjects(projects) {
   return { projects: next, changed };
 }
 
+async function readStreamBody(stream) {
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks).toString("utf8");
+}
+
+async function readProjectsBlobViaGet(access) {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const result = await get(PROJECTS_BLOB_PATH, {
+    access,
+    useCache: false,
+    token,
+  });
+  if (!result || result.statusCode !== 200 || !result.stream) return null;
+  const parsed = JSON.parse(await readStreamBody(result.stream));
+  return Array.isArray(parsed) ? parsed : [];
+}
+
 async function readProjectsBlob() {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
+  for (const access of ["private", "public"]) {
+    try {
+      const projects = await readProjectsBlobViaGet(access);
+      if (projects) return projects;
+    } catch {
+      // try next access mode
+    }
+  }
+
   const meta = await head(PROJECTS_BLOB_PATH, { token });
   const bust = meta.url.includes("?") ? "&" : "?";
   const res = await fetch(`${meta.url}${bust}t=${Date.now()}`, { cache: "no-store" });
@@ -57,6 +89,12 @@ async function readProjectsBlob() {
 }
 
 async function readProjects() {
+  if (lastWrittenProjects && Date.now() - lastWrittenAt < WRITE_CACHE_MS) {
+    const { projects: sanitized, changed } = sanitizeProjects(lastWrittenProjects);
+    if (changed) await writeProjects(sanitized);
+    return sanitized;
+  }
+
   let projects;
   if (!useBlob()) {
     projects = readProjectsDisk();
@@ -77,15 +115,20 @@ async function writeProjects(projects) {
   if (!useBlob()) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.writeFileSync(DB_FILE, JSON.stringify(projects, null, 2), "utf8");
+    lastWrittenProjects = projects;
+    lastWrittenAt = Date.now();
     return;
   }
   await put(PROJECTS_BLOB_PATH, JSON.stringify(projects), {
-    access: "public",
+    access: "private",
     contentType: "application/json",
     addRandomSuffix: false,
     allowOverwrite: true,
+    cacheControlMaxAge: 60,
     token: process.env.BLOB_READ_WRITE_TOKEN,
   });
+  lastWrittenProjects = projects;
+  lastWrittenAt = Date.now();
 }
 
 async function storeUpload(file) {

@@ -15,7 +15,47 @@ function showToast(message, durationMs = 1800) {
 
 const uiState = {
   editingComment: null,
+  projects: null,
+  lastLocalUpdate: 0,
 };
+
+function upsertProject(project) {
+  if (!project?.id) return;
+  const list = Array.isArray(uiState.projects) ? [...uiState.projects] : [];
+  const idx = list.findIndex((p) => p.id === project.id);
+  if (idx >= 0) list[idx] = project;
+  else list.push(project);
+  uiState.projects = list;
+  uiState.lastLocalUpdate = Date.now();
+}
+
+function removeProjectFromState(projectId) {
+  if (!Array.isArray(uiState.projects)) return;
+  uiState.projects = uiState.projects.filter((p) => p.id !== projectId);
+  uiState.lastLocalUpdate = Date.now();
+}
+
+async function loadProjects() {
+  const data = await api(`/api/projects?_=${Date.now()}`);
+  const fetched = data.projects || [];
+  if (!uiState.projects || Date.now() - uiState.lastLocalUpdate > 30000) {
+    uiState.projects = fetched;
+    return uiState.projects;
+  }
+
+  const merged = [...fetched];
+  for (const local of uiState.projects) {
+    const idx = merged.findIndex((p) => p.id === local.id);
+    if (idx >= 0) merged[idx] = local;
+    else merged.push(local);
+  }
+  uiState.projects = merged;
+  return uiState.projects;
+}
+
+function findProject(projectId) {
+  return (uiState.projects || []).find((p) => p.id === projectId) || null;
+}
 
 function openConfirmModal(message) {
   return new Promise((resolve) => {
@@ -68,7 +108,10 @@ function getRoute() {
 }
 
 async function api(path, options = {}) {
-  const res = await fetch(path, options);
+  const method = (options.method || "GET").toUpperCase();
+  const fetchOptions = { ...options };
+  if (method === "GET") fetchOptions.cache = "no-store";
+  const res = await fetch(path, fetchOptions);
   const text = await res.text();
   let body = {};
   if (text) {
@@ -394,25 +437,32 @@ function renderNotFound() {
   return renderLayout(`<main><h2 class="page-title">아이디어를 찾을 수 없습니다</h2><button class="primary-button" data-action="go-home"><span class="icon">←</span><span>메인으로</span></button></main>`);
 }
 
-async function refreshCommentsOverlay(projectId, project) {
+function paintHome({ overlayKind = null, overlayProject = null, overlayLoading = false, commentsOverlay = false } = {}) {
   const app = document.getElementById("app");
-  const listData = await api(`/api/projects?_=${Date.now()}`);
-  app.innerHTML = renderHome(listData.projects || [], {
-    overlayKind: "comments",
-    overlayProject: project,
-    commentsOverlay: true,
+  app.innerHTML = renderHome(uiState.projects || [], {
+    overlayKind,
+    overlayProject,
+    overlayLoading,
+    commentsOverlay,
   });
   attachHandlers();
 }
 
+async function refreshCommentsOverlay(project) {
+  upsertProject(project);
+  paintHome({
+    overlayKind: "comments",
+    overlayProject: project,
+    commentsOverlay: true,
+  });
+}
+
 async function refreshDetailOverlay(project) {
-  const app = document.getElementById("app");
-  const listData = await api(`/api/projects?_=${Date.now()}`);
-  app.innerHTML = renderHome(listData.projects || [], {
+  upsertProject(project);
+  paintHome({
     overlayKind: "detail",
     overlayProject: project,
   });
-  attachHandlers();
 }
 
 async function render({ skipOverlayLoading = false } = {}) {
@@ -429,36 +479,34 @@ async function render({ skipOverlayLoading = false } = {}) {
   }
 
   try {
+    await loadProjects();
+
     if (route.name === "new") {
-      const data = await api("/api/projects");
-      app.innerHTML = renderHome(data.projects || [], { overlayKind: "new" });
+      app.innerHTML = renderHome(uiState.projects, { overlayKind: "new" });
     } else if (route.name === "detail") {
-      const listData = await api(`/api/projects?_=${Date.now()}`);
-      const detailData = await api(`/api/projects/${encodeURIComponent(route.id)}?_=${Date.now()}`);
-      if (!detailData.project) {
-        app.innerHTML = renderHome(listData.projects || []);
+      const project = findProject(route.id);
+      if (!project) {
+        app.innerHTML = renderHome(uiState.projects);
         showToast("아이디어를 찾을 수 없습니다.");
       } else {
-        app.innerHTML = renderHome(listData.projects || [], {
+        app.innerHTML = renderHome(uiState.projects, {
           overlayKind: "detail",
-          overlayProject: detailData.project,
+          overlayProject: project,
         });
       }
     } else if (route.name === "comments") {
-      const listData = await api(`/api/projects?_=${Date.now()}`);
-      const commentData = await api(`/api/projects/${encodeURIComponent(route.id)}?_=${Date.now()}`);
-      if (!commentData.project) {
-        app.innerHTML = renderHome(listData.projects || []);
+      const project = findProject(route.id);
+      if (!project) {
+        app.innerHTML = renderHome(uiState.projects);
         showToast("아이디어를 찾을 수 없습니다.");
       } else {
-        app.innerHTML = renderHome(listData.projects || [], {
+        app.innerHTML = renderHome(uiState.projects, {
           overlayKind: "comments",
-          overlayProject: commentData.project,
+          overlayProject: project,
         });
       }
     } else {
-      const data = await api("/api/projects");
-      app.innerHTML = renderHome(data.projects || []);
+      app.innerHTML = renderHome(uiState.projects);
     }
   } catch (err) {
     if (overlayMeta) {
@@ -517,6 +565,7 @@ function attachHandlers() {
       const ok = await openConfirmModal("프로젝트를 삭제할까요? 삭제 후 복구할 수 없습니다.");
       if (!ok) return;
       await api(`/api/projects/${encodeURIComponent(projectId)}`, { method: "DELETE" });
+      removeProjectFromState(projectId);
       showToast("프로젝트를 삭제했습니다.");
       return navigate("#/");
     }
@@ -524,7 +573,9 @@ function attachHandlers() {
     if (action === "delete-comment") {
       const ok = await openConfirmModal("이 코멘트를 삭제할까요?");
       if (!ok) return;
-      await api(`/api/projects/${encodeURIComponent(projectId)}/comments/${encodeURIComponent(commentId)}`, { method: "DELETE" });
+      const result = await api(`/api/projects/${encodeURIComponent(projectId)}/comments/${encodeURIComponent(commentId)}`, {
+        method: "DELETE",
+      });
       if (
         uiState.editingComment &&
         uiState.editingComment.projectId === projectId &&
@@ -533,6 +584,7 @@ function attachHandlers() {
         uiState.editingComment = null;
       }
       showToast("코멘트를 삭제했습니다.");
+      if (result.project) return refreshCommentsOverlay(result.project);
       return render({ skipOverlayLoading: true });
     }
 
@@ -551,13 +603,14 @@ function attachHandlers() {
     if (action === "save-comment-edit") {
       const text = document.getElementById("editCommentBody")?.value.trim() || "";
       if (!text) return showToast("수정할 내용을 입력해 주세요.");
-      await api(`/api/projects/${encodeURIComponent(projectId)}/comments/${encodeURIComponent(commentId)}`, {
+      const result = await api(`/api/projects/${encodeURIComponent(projectId)}/comments/${encodeURIComponent(commentId)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ body: text }),
       });
       uiState.editingComment = null;
       showToast("코멘트를 수정했습니다.");
+      if (result.project) return refreshCommentsOverlay(result.project);
       return render({ skipOverlayLoading: true });
     }
 
@@ -588,7 +641,7 @@ async function submitComment(projectId) {
       const fresh = await api(`/api/projects/${encodeURIComponent(projectId)}?_=${Date.now()}`);
       project = fresh.project;
     }
-    if (project) return refreshCommentsOverlay(projectId, project);
+    if (project) return refreshCommentsOverlay(project);
   }
   return render({ skipOverlayLoading: true });
 }
@@ -630,12 +683,12 @@ async function saveEditProject(form) {
     });
     showToast("저장되었습니다.", 2000);
     const route = getRoute();
-    let project = result.project;
+    const project = result.project;
     if (!project) {
-      const fresh = await api(`/api/projects/${encodeURIComponent(projectId)}?_=${Date.now()}`);
-      project = fresh.project;
+      showToast("저장은 됐지만 화면을 갱신하지 못했습니다.");
+      return render({ skipOverlayLoading: true });
     }
-    if (route.name === "detail" && route.id === projectId && project) {
+    if (route.name === "detail" && route.id === projectId) {
       return refreshDetailOverlay(project);
     }
     if (route.name !== "detail" || route.id !== projectId) {
@@ -681,7 +734,8 @@ function bindProjectForm(form, { mode }) {
     if (mode === "create") {
       if (!url && !hasNewFile) return showToast("URL 또는 파일 중 하나를 입력해 주세요.");
       try {
-        await api("/api/projects", { method: "POST", body: data });
+        const result = await api("/api/projects", { method: "POST", body: data });
+        if (result.project) upsertProject(result.project);
         showToast("아이디어가 등록되었습니다.");
         navigate("#/");
       } catch (err) {

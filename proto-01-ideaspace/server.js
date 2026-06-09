@@ -20,6 +20,10 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/api", (req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
 app.use("/uploads", express.static(UPLOAD_DIR));
 
 const upload = multer({
@@ -255,7 +259,7 @@ app.patch(
     if (!comment) return res.status(404).json({ message: "코멘트를 찾을 수 없습니다." });
     comment.body = body.trim().slice(0, 400);
     await writeProjects(projects);
-    res.json({ comment });
+    res.json({ comment, project: projectOut(project) });
   })
 );
 
@@ -272,7 +276,7 @@ app.delete(
       return res.status(404).json({ message: "코멘트를 찾을 수 없습니다." });
     }
     await writeProjects(projects);
-    res.json({ ok: true });
+    res.json({ ok: true, project: projectOut(project) });
   })
 );
 
