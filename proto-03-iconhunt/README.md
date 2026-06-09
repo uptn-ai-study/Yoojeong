@@ -22,6 +22,8 @@ python3 -m http.server 8080
 
 ## Vercel 배포
 
+**프로덕션 URL:** https://yoojeong-iconhunt.vercel.app
+
 저장소 [uptn-ai-study/Yoojeong](https://github.com/uptn-ai-study/Yoojeong) 연결 시 **Root Directory**를 `proto-03-iconhunt`로 지정합니다.
 
 | 설정 | 값 |
