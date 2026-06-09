@@ -1,4 +1,5 @@
 import { ICONS } from './icons.js';
+import { fetchRankings as fetchRankingsApi, submitRankingScore } from './rankingApi.js';
 
 const MAX_LEVEL = 30;
 const RANKING_KEY = 'iconHunt_rankings';
@@ -13,6 +14,8 @@ const ANIMALS = [
   'Wolf', 'Tiger', 'Panda', 'Eagle', 'Dolphin', 'Fox', 'Bear', 'Owl',
   'Rabbit', 'Lion', 'Hawk', 'Otter', 'Lynx', 'Falcon', 'Koala', 'Badger'
 ];
+
+let rankingsCache = null;
 
 const state = {
   screen: 'intro',
@@ -98,7 +101,7 @@ function deletePlayerData(id) {
   const targetId = id || getPlayerData()?.id;
   localStorage.removeItem(PLAYER_KEY);
   if (targetId) {
-    const rankings = getRankings().filter((r) => r.id !== targetId);
+    const rankings = getRankingsLocal().filter((r) => r.id !== targetId);
     localStorage.setItem(RANKING_KEY, JSON.stringify(rankings));
   }
 }
@@ -119,7 +122,7 @@ function loadPlayer() {
       if (parsed?.id) {
         state.playerId = parsed.id;
         if (typeof parsed.bestScore !== 'number') {
-          const rankings = getRankings().filter((r) => r.id === parsed.id);
+          const rankings = getRankingsLocal().filter((r) => r.id === parsed.id);
           const best = rankings.length ? Math.max(...rankings.map((r) => r.score)) : 0;
           savePlayerData(parsed.id, best);
         }
@@ -134,7 +137,7 @@ function loadPlayer() {
   return true;
 }
 
-function getRankings() {
+function getRankingsLocal() {
   try {
     return JSON.parse(localStorage.getItem(RANKING_KEY) || '[]');
   } catch {
@@ -142,10 +145,25 @@ function getRankings() {
   }
 }
 
-function saveRanking(score) {
-  savePlayerBest(score);
+function saveRankingsLocal(rankings) {
+  localStorage.setItem(RANKING_KEY, JSON.stringify(rankings.slice(0, 100)));
+}
 
-  const rankings = getRankings();
+function normalizeRankingEntry(entry) {
+  return {
+    id: entry.id,
+    score: entry.score,
+    date: entry.date ?? entry.timestamp ?? Date.now(),
+  };
+}
+
+function getRankings() {
+  const source = rankingsCache ?? getRankingsLocal();
+  return source.map(normalizeRankingEntry);
+}
+
+function upsertRankingLocal(score) {
+  const rankings = getRankingsLocal();
   const existing = rankings.findIndex((r) => r.id === state.playerId);
   const entry = { id: state.playerId, score, date: Date.now() };
 
@@ -156,7 +174,36 @@ function saveRanking(score) {
   }
 
   rankings.sort((a, b) => b.score - a.score);
-  localStorage.setItem(RANKING_KEY, JSON.stringify(rankings.slice(0, 100)));
+  const trimmed = rankings.slice(0, 100);
+  saveRankingsLocal(trimmed);
+  rankingsCache = trimmed;
+  return trimmed;
+}
+
+async function refreshRankings() {
+  const remote = await fetchRankingsApi();
+  if (remote?.length) {
+    rankingsCache = remote.map((entry) => normalizeRankingEntry(entry));
+    saveRankingsLocal(rankingsCache);
+    return true;
+  }
+  rankingsCache = getRankingsLocal();
+  return false;
+}
+
+async function saveRanking(score) {
+  savePlayerBest(score);
+  const rankings = upsertRankingLocal(score);
+
+  if (score > 0) {
+    const updated = await submitRankingScore(state.playerId, score);
+    if (updated?.length) {
+      rankingsCache = updated.map((entry) => normalizeRankingEntry(entry));
+      saveRankingsLocal(rankingsCache);
+      return rankingsCache;
+    }
+  }
+
   return rankings;
 }
 
@@ -190,8 +237,9 @@ function closeOverlay(id) {
   $(id).classList.remove('open');
 }
 
-function openBottomSheet() {
+async function openBottomSheet() {
   $('#sheet-best').textContent = getBestScore().toLocaleString();
+  await refreshRankings();
   renderRankingList('#ranking-list');
   requestAnimationFrame(() => $('#ranking-sheet').classList.add('open'));
 }
@@ -560,8 +608,8 @@ function handleTimeUp() {
   openOverlay('#timeup-overlay');
 }
 
-function showLevelClear(timeBonus, baseScore) {
-  saveRanking(state.totalScore);
+async function showLevelClear(timeBonus, baseScore) {
+  await saveRanking(state.totalScore);
   const rank = getPlayerRank(state.totalScore);
   const config = getLevelConfig(state.level);
 
@@ -611,9 +659,9 @@ function retryLevel() {
   startLevel();
 }
 
-function showCredits() {
+async function showCredits() {
   closeOverlay('#clear-overlay');
-  saveRanking(state.totalScore);
+  await saveRanking(state.totalScore);
   savePlayerBest(state.totalScore);
   const rank = getPlayerRank(state.totalScore);
   $('#credits-final-score').textContent = state.totalScore.toLocaleString();
@@ -622,14 +670,14 @@ function showCredits() {
   showScreen('credits');
 }
 
-function exitGame() {
+async function exitGame() {
   stopIconDynamics();
   stopTimer();
   closeOverlay('#exit-overlay');
   closeOverlay('#clear-overlay');
   closeOverlay('#timeup-overlay');
   closeBottomSheet();
-  if (state.totalScore > 0) saveRanking(state.totalScore);
+  if (state.totalScore > 0) await saveRanking(state.totalScore);
   state.level = 1;
   state.totalScore = 0;
   state.gameActive = false;
@@ -682,6 +730,7 @@ function init() {
   });
 
   showScreen('intro');
+  refreshRankings();
 
   if (window.location.hash === '#allclear') {
     state.playerId = getPlayerData()?.id || 'GoldenTiger';

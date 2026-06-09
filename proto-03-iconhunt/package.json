@@ -1,0 +1,9 @@
+{
+  "name": "icon-hunt",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "@vercel/node": "^5.1.8"
+  }
+}
