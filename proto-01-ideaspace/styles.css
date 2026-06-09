@@ -910,8 +910,8 @@ header {
 .banner-preview-plain {
   display: grid;
   place-items: center;
+  width: 100%;
   min-height: 120px;
-  color: var(--text-muted);
   font-size: 13px;
 }
 

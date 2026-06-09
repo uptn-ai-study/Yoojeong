@@ -147,23 +147,45 @@ function renderBannerPreviewWithImage(src) {
   </div>`;
 }
 
-function renderBannerDefaultMessage() {
-  return BANNER_DEFAULT_TEXT;
-}
 const PLAIN_BANNER_COLORS = [
   "rgb(245, 134, 23)",
   "rgb(245, 240, 230)",
   "rgb(65, 111, 48)",
   "rgb(233, 16, 86)",
+  "rgb(41, 43, 43)",
 ];
 
-function plainBannerColor(project) {
-  const key = project?.id || "";
+const PLAIN_BANNER_DARK_TEXT_COLORS = new Set([
+  "rgb(65, 111, 48)",
+  "rgb(233, 16, 86)",
+  "rgb(41, 43, 43)",
+]);
+
+function plainBannerColor(projectOrKey) {
+  const key = typeof projectOrKey === "string" ? projectOrKey : projectOrKey?.id || "";
   let hash = 0;
   for (let i = 0; i < key.length; i++) {
     hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
   }
   return PLAIN_BANNER_COLORS[hash % PLAIN_BANNER_COLORS.length];
+}
+
+function plainBannerTextColor(bgColor) {
+  return PLAIN_BANNER_DARK_TEXT_COLORS.has(bgColor) ? "rgb(245, 240, 230)" : "rgba(41, 43, 43, 0.72)";
+}
+
+function renderBannerPlainPreview(key) {
+  const color = plainBannerColor(key);
+  const textColor = plainBannerTextColor(color);
+  return `<div class="banner-preview-plain" style="background-color:${color};color:${textColor}">${BANNER_DEFAULT_TEXT}</div>`;
+}
+
+function getFormBannerColorKey(form) {
+  if (form.dataset.projectId) return form.dataset.projectId;
+  if (!form.dataset.bannerColorKey) {
+    form.dataset.bannerColorKey = `draft-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+  }
+  return form.dataset.bannerColorKey;
 }
 
 function bannerStyle(project) {
@@ -282,7 +304,8 @@ function renderOverlayShell(ariaLabel, bodyHtml, { showCloseButton = true } = {}
 }
 
 function renderFormOverlay() {
-  const formHtml = `<section class="form-card form-card-overlay"><form id="projectForm" enctype="multipart/form-data">
+  const draftBannerKey = `draft-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+  const formHtml = `<section class="form-card form-card-overlay"><form id="projectForm" data-banner-color-key="${draftBannerKey}" enctype="multipart/form-data">
         <div class="form-grid">
           <div>
             <div class="field-group"><label class="field-label">서비스명 <span>최대 30자</span></label><input type="text" name="title" class="input" maxlength="30" required /></div>
@@ -296,7 +319,7 @@ function renderFormOverlay() {
             <div class="field-group"><label class="field-label">공유 URL (선택)</label><input type="url" name="url" class="input" placeholder="https://..." /></div>
             <div class="field-group"><label class="field-label">파일 업로드 (선택)</label><input type="file" name="file" class="input" /></div>
             <div class="field-group"><label class="field-label">배너 업로드 (선택)</label><input type="file" name="banner" accept="image/*" class="input" /></div>
-            <div class="banner-preview" id="bannerPreview">${renderBannerDefaultMessage()}</div>
+            <div class="banner-preview" id="bannerPreview">${renderBannerPlainPreview(draftBannerKey)}</div>
           </div>
         </div>
         <div class="form-footer"><button type="button" class="ghost-button" data-action="go-home">취소</button><button type="submit" class="primary-button"><span class="icon">✔</span><span>등록</span></button></div>
@@ -307,7 +330,7 @@ function renderFormOverlay() {
 function renderDetailOverlay(project) {
   const bannerPreview = project.bannerPath
     ? renderBannerPreviewWithImage(fileUrl(project.bannerPath))
-    : `<div class="banner-preview-plain" style="background-color:${plainBannerColor(project)}" aria-hidden="true">기본 배너</div>`;
+    : renderBannerPlainPreview(project.id);
   const fileHint = project.filePath
     ? `<div class="hint">현재 파일: <a href="${fileUrl(project.filePath)}" target="_blank">${project.fileName || "다운로드"}</a> (새 파일 선택 시 교체됩니다)</div>`
     : `<div class="hint">등록된 파일이 없습니다. 새 파일을 선택해 주세요.</div>`;
@@ -720,7 +743,7 @@ function clearBannerPreview(form, preview, { mode }) {
   if (removeInput) removeInput.value = mode === "edit" ? "1" : "";
   if (preview) {
     preview.classList.remove("banner-preview--image");
-    preview.innerHTML = renderBannerDefaultMessage();
+    preview.innerHTML = renderBannerPlainPreview(getFormBannerColorKey(form));
   }
 }
 
