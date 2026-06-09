@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ICON HUNT</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/variable/SUIT-Variable.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- Intro -->
+    <div id="intro-screen" class="screen active">
+      <div id="intro-pattern-top" class="intro-pattern"></div>
+      <div class="intro-center">
+        <h1 class="intro-title">ICON HUNT</h1>
+        <button id="btn-guide" class="intro-guide-btn">가이드</button>
+        <div class="intro-actions">
+          <button id="btn-start" class="btn-primary">시작하기</button>
+        </div>
+      </div>
+      <div id="intro-pattern-bottom" class="intro-pattern bottom"></div>
+    </div>
+
+    <!-- Game -->
+    <div id="game-screen" class="screen">
+      <header class="game-header">
+        <div class="hud-row hud-row-top">
+          <button id="btn-exit" class="btn-gray-sm">나가기</button>
+          <span class="hud-logo">ICON HUNT</span>
+          <button id="btn-ranking" class="btn-outline-pill">랭킹</button>
+        </div>
+        <div class="hud-row hud-row-stats">
+          <div class="stat-inline">
+            <span class="stat-label">ID</span>
+            <span id="hud-player-id" class="stat-value-inline">—</span>
+          </div>
+          <div class="stat-inline">
+            <span class="stat-label">레벨</span>
+            <span id="hud-level" class="stat-value-inline">1</span>
+          </div>
+          <div class="stat-inline">
+            <span class="stat-label">점수</span>
+            <span id="hud-score" class="stat-value-inline">0</span>
+          </div>
+          <div class="stat-inline">
+            <span class="stat-label">시간</span>
+            <span id="hud-timer" class="stat-value-inline">—</span>
+          </div>
+        </div>
+      </header>
+      <div id="play-area" class="play-area"></div>
+      <footer class="target-footer">
+        <div class="target-footer-header">
+          <span class="target-label">찾을 아이콘</span>
+          <span id="target-progress" class="target-progress">0/1</span>
+        </div>
+        <div id="target-preview-list" class="target-preview-list"></div>
+      </footer>
+    </div>
+
+    <!-- All Clear (Level 30) -->
+    <div id="credits-screen" class="screen">
+      <div class="allclear-wrap">
+        <div class="allclear-hero">
+          <span class="allclear-badge">ALL CLEAR</span>
+          <h1 class="allclear-title">30레벨 클리어!</h1>
+          <p class="allclear-sub">축하합니다! 모든 레벨을 완료했습니다.</p>
+        </div>
+        <div class="card allclear-card">
+          <div class="info-row-card">
+            <span class="info-row-label">아이디</span>
+            <span id="credits-player" class="info-row-value">—</span>
+          </div>
+          <div class="info-row-card">
+            <span class="info-row-label">최종 점수</span>
+            <span id="credits-final-score" class="info-row-value allclear-score">0</span>
+          </div>
+          <div class="info-row-card">
+            <span class="info-row-label">최종 순위</span>
+            <span id="credits-rank" class="info-row-value">—</span>
+          </div>
+        </div>
+        <p class="allclear-credit">ICON HUNT · Iconoir 233 icons · 2026</p>
+        <button id="btn-credits-home" class="btn-primary allclear-btn">처음으로</button>
+      </div>
+    </div>
+
+    <!-- Guide Overlay -->
+    <div id="guide-overlay" class="overlay">
+      <div class="modal guide-modal">
+        <div class="modal-title">플레이 가이드</div>
+        <div class="guide-list">
+          <div class="guide-item">
+            <span class="guide-num">1</span>
+            <p>화면 하단에 표시된 <strong>찾을 아이콘</strong>을 플레이 영역에서 터치하세요.</p>
+          </div>
+          <div class="guide-item">
+            <span class="guide-num">2</span>
+            <p>제한 시간 안에 타겟을 모두 찾으면 레벨 클리어! 레벨이 올라갈수록 찾을 아이콘 수가 늘어납니다.</p>
+          </div>
+          <div class="guide-item">
+            <span class="guide-num">3</span>
+            <p>빠르게 클리어할수록 <strong>시간 보너스</strong> 점수를 더 받을 수 있어요.</p>
+          </div>
+          <div class="guide-item">
+            <span class="guide-num">4</span>
+            <p>잘못된 아이콘을 누르면 시간이 2초 차감됩니다.</p>
+          </div>
+          <div class="guide-item">
+            <span class="guide-num">5</span>
+            <p>레벨이 높아질수록 아이콘 회전, 크기 차이, 이동, 깜빡임 등 난이도가 올라갑니다.</p>
+          </div>
+          <div class="guide-item">
+            <span class="guide-num">6</span>
+            <p>총 <strong>30레벨</strong>을 클리어하면 올클리어! <strong>랭킹</strong>에서 최고 기록을 확인하세요.</p>
+          </div>
+        </div>
+        <button id="btn-guide-ok" class="btn-primary">확인</button>
+      </div>
+    </div>
+
+    <!-- Welcome Overlay -->
+    <div id="welcome-overlay" class="overlay">
+      <div class="modal">
+        <div class="modal-title">환영합니다!</div>
+        <div class="modal-body">
+          랜덤 아이디로 숨은 아이콘 찾기에<br>도전하게 됩니다!
+        </div>
+        <div id="welcome-id" class="modal-id">—</div>
+        <button id="btn-welcome-ok" class="btn-primary">도전하기</button>
+      </div>
+    </div>
+
+    <!-- Level Clear Overlay -->
+    <div id="clear-overlay" class="overlay">
+      <div class="modal">
+        <div class="modal-title" id="clear-title">레벨 <span id="clear-level">1</span> 클리어!</div>
+        <div class="score-breakdown">
+          <div class="score-row">
+            <span>찾은 아이콘</span>
+            <span id="clear-targets">1개</span>
+          </div>
+          <div class="score-row">
+            <span>기본 점수</span>
+            <span id="clear-base">0</span>
+          </div>
+          <div class="score-row">
+            <span>시간 보너스</span>
+            <span id="clear-time">0</span>
+          </div>
+          <div class="score-row total">
+            <span>이번 레벨</span>
+            <span id="clear-total-level">0</span>
+          </div>
+          <div class="score-row total">
+            <span>누적 점수</span>
+            <span id="clear-total">0</span>
+          </div>
+        </div>
+        <div class="rank-highlight">
+          <div class="rank-num" id="clear-rank">—</div>
+          <div class="rank-label" id="clear-rank-sub">현재 순위</div>
+        </div>
+        <div id="clear-ranking-preview" class="ranking-list" style="max-height:160px"></div>
+        <button id="btn-next-level" class="btn-primary">점수 확인</button>
+      </div>
+    </div>
+
+    <!-- Exit Confirm Overlay -->
+    <div id="exit-overlay" class="overlay">
+      <div class="modal">
+        <div class="modal-title">게임 나가기</div>
+        <div class="modal-body">진행 중인 게임이 저장되지 않습니다.<br>정말 나가시겠습니까?</div>
+        <div class="btn-row">
+          <button id="btn-exit-cancel" class="btn-secondary">계속하기</button>
+          <button id="btn-exit-confirm" class="btn-primary" style="flex:1;height:48px;font-size:15px">나가기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Time Up Overlay -->
+    <div id="timeup-overlay" class="overlay">
+      <div class="modal">
+        <div class="modal-title">시간 초과!</div>
+        <div id="timeup-msg" class="modal-body">다시 도전해보세요.</div>
+        <button id="btn-retry" class="btn-primary">다시 도전</button>
+      </div>
+    </div>
+
+    <!-- Ranking Bottom Sheet -->
+    <div id="ranking-sheet" class="bs-overlay">
+      <div class="bs-sheet">
+        <div class="bs-handle"></div>
+        <div class="bs-header">
+          <span class="bs-title">랭킹</span>
+          <button id="btn-ranking-close" class="bs-close">✕</button>
+        </div>
+        <div class="ranking-my-record">
+          <div class="info-row-card">
+            <span class="info-row-label">나의 최고 기록</span>
+            <span id="sheet-best" class="info-row-value">0</span>
+          </div>
+        </div>
+        <div class="bs-section-title">TOP 10</div>
+        <div id="ranking-list" class="ranking-list"></div>
+      </div>
+    </div>
+
+  </div>
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>
