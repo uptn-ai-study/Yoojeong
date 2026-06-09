@@ -166,6 +166,13 @@ app.patch(
     project.author = author.trim();
     project.url = nextUrl;
 
+    const removeBanner = req.body.removeBanner === "1" || req.body.removeBanner === "true";
+    const bannerFile = files.banner?.[0];
+    if (removeBanner && !bannerFile) {
+      removeLocalFile(project.bannerPath);
+      project.bannerPath = "";
+    }
+
     await applyFileUploads(project, files);
     await writeProjects(projects);
     res.json({ project: projectOut(project) });
@@ -203,6 +210,13 @@ app.post(
     project.version = version.trim() || "1.0";
     project.author = author.trim();
     project.url = nextUrl;
+
+    const removeBanner = req.body.removeBanner === "1" || req.body.removeBanner === "true";
+    const bannerFile = files.banner?.[0];
+    if (removeBanner && !bannerFile) {
+      removeLocalFile(project.bannerPath);
+      project.bannerPath = "";
+    }
 
     await applyFileUploads(project, files);
     await writeProjects(projects);

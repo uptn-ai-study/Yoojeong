@@ -137,7 +137,19 @@ function fileUrl(filePath) {
   return `/${filePath.replace(/^\/+/, "")}`;
 }
 
+const BANNER_DEFAULT_TEXT = "기본 배너가 사용됩니다.";
 const BANNER_PLAIN_CLASS = "banner-thumbnail--plain";
+
+function renderBannerPreviewWithImage(src) {
+  return `<div class="banner-preview-image">
+    <img src="${escAttr(src)}" alt="배너 미리보기" />
+    <button type="button" class="close-toggle banner-preview-remove" data-action="remove-banner" aria-label="배너 삭제">×</button>
+  </div>`;
+}
+
+function renderBannerDefaultMessage() {
+  return BANNER_DEFAULT_TEXT;
+}
 const PLAIN_BANNER_COLORS = [
   "rgb(245, 134, 23)",
   "rgb(245, 240, 230)",
@@ -284,17 +296,17 @@ function renderFormOverlay() {
             <div class="field-group"><label class="field-label">공유 URL (선택)</label><input type="url" name="url" class="input" placeholder="https://..." /></div>
             <div class="field-group"><label class="field-label">파일 업로드 (선택)</label><input type="file" name="file" class="input" /></div>
             <div class="field-group"><label class="field-label">배너 업로드 (선택)</label><input type="file" name="banner" accept="image/*" class="input" /></div>
-            <div class="banner-preview" id="bannerPreview">기본 배너가 사용됩니다.</div>
+            <div class="banner-preview" id="bannerPreview">${renderBannerDefaultMessage()}</div>
           </div>
         </div>
         <div class="form-footer"><button type="button" class="ghost-button" data-action="go-home">취소</button><button type="submit" class="primary-button"><span class="icon">✔</span><span>등록</span></button></div>
       </form></section>`;
-  return renderOverlayShell("새 아이디어 등록", formHtml, { showCloseButton: false });
+  return renderOverlayShell("새 아이디어 등록", formHtml);
 }
 
 function renderDetailOverlay(project) {
   const bannerPreview = project.bannerPath
-    ? `<img src="${fileUrl(project.bannerPath)}" alt="배너 미리보기" />`
+    ? renderBannerPreviewWithImage(fileUrl(project.bannerPath))
     : `<div class="banner-preview-plain" style="background-color:${plainBannerColor(project)}" aria-hidden="true">기본 배너</div>`;
   const fileHint = project.filePath
     ? `<div class="hint">현재 파일: <a href="${fileUrl(project.filePath)}" target="_blank">${project.fileName || "다운로드"}</a> (새 파일 선택 시 교체됩니다)</div>`
@@ -313,7 +325,7 @@ function renderDetailOverlay(project) {
           <div>
             <div class="field-group"><label class="field-label">공유 URL (선택)</label><input type="url" name="url" class="input" placeholder="https://..." value="${escAttr(project.url)}" /></div>
             <div class="field-group"><label class="field-label">파일 업로드 (선택)</label><input type="file" name="file" class="input" />${fileHint}</div>
-            <div class="field-group"><label class="field-label">배너 업로드 (선택)</label><input type="file" name="banner" accept="image/*" class="input" /></div>
+            <div class="field-group"><label class="field-label">배너 업로드 (선택)</label><input type="file" name="banner" accept="image/*" class="input" /><input type="hidden" name="removeBanner" value="" /></div>
             <div class="banner-preview" id="bannerPreview">${bannerPreview}</div>
           </div>
         </div>
@@ -325,7 +337,7 @@ function renderDetailOverlay(project) {
           </div>
         </div>
       </form></section>`;
-  return renderOverlayShell("아이디어 상세", formHtml, { showCloseButton: false });
+  return renderOverlayShell("아이디어 상세", formHtml);
 }
 
 function renderHome(projects, { overlayKind = null, overlayProject = null, overlayLoading = false } = {}) {
@@ -701,25 +713,45 @@ async function saveEditProject(form) {
   }
 }
 
+function clearBannerPreview(form, preview, { mode }) {
+  const banner = form.elements.banner;
+  const removeInput = form.elements.removeBanner;
+  if (banner) banner.value = "";
+  if (removeInput) removeInput.value = mode === "edit" ? "1" : "";
+  if (preview) {
+    preview.classList.remove("banner-preview--image");
+    preview.innerHTML = renderBannerDefaultMessage();
+  }
+}
+
 function bindProjectForm(form, { mode }) {
   if (!form) return;
 
   const banner = form.elements.banner;
   const preview = document.getElementById("bannerPreview");
-  const defaultPreviewHtml =
-    mode === "edit" && preview?.querySelector("img")
-      ? preview.innerHTML
-      : "기본 배너가 사용됩니다.";
+  if (preview?.querySelector(".banner-preview-image")) {
+    preview.classList.add("banner-preview--image");
+  }
+
+  form.addEventListener("click", (e) => {
+    const btn = e.target.closest('[data-action="remove-banner"]');
+    if (!btn || !form.contains(btn)) return;
+    e.preventDefault();
+    clearBannerPreview(form, preview, { mode });
+  });
 
   banner?.addEventListener("change", () => {
+    const removeInput = form.elements.removeBanner;
+    if (removeInput) removeInput.value = "";
     const file = banner.files?.[0];
     if (!file || !preview) {
-      if (preview) preview.innerHTML = defaultPreviewHtml;
+      if (!file) clearBannerPreview(form, preview, { mode });
       return;
     }
     const reader = new FileReader();
     reader.onload = (ev) => {
-      preview.innerHTML = `<img src="${ev.target.result}" alt="배너 미리보기" />`;
+      preview.classList.add("banner-preview--image");
+      preview.innerHTML = renderBannerPreviewWithImage(ev.target.result);
     };
     reader.readAsDataURL(file);
   });
