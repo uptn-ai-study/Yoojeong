@@ -95,13 +95,28 @@ function fileUrl(filePath) {
 }
 
 const BANNER_PLAIN_CLASS = "banner-thumbnail--plain";
+const PLAIN_BANNER_COLORS = [
+  "rgb(245, 134, 23)",
+  "rgb(245, 240, 230)",
+  "rgb(65, 111, 48)",
+  "rgb(233, 16, 86)",
+];
+
+function plainBannerColor(project) {
+  const key = project?.id || "";
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  }
+  return PLAIN_BANNER_COLORS[hash % PLAIN_BANNER_COLORS.length];
+}
 
 function bannerStyle(project) {
   if (project.bannerPath) {
     const url = fileUrl(project.bannerPath);
     return `style="background-image:url('${url.replace(/'/g, "%27")}')"`;
   }
-  return `style="background-color:rgb(245, 240, 230)"`;
+  return `style="background-color:${plainBannerColor(project)}"`;
 }
 
 function escAttr(value) {
@@ -237,7 +252,7 @@ function renderFormOverlay() {
 function renderDetailOverlay(project) {
   const bannerPreview = project.bannerPath
     ? `<img src="${fileUrl(project.bannerPath)}" alt="배너 미리보기" />`
-    : `<div class="banner-preview-plain" aria-hidden="true">기본 배너</div>`;
+    : `<div class="banner-preview-plain" style="background-color:${plainBannerColor(project)}" aria-hidden="true">기본 배너</div>`;
   const fileHint = project.filePath
     ? `<div class="hint">현재 파일: <a href="${fileUrl(project.filePath)}" target="_blank">${project.fileName || "다운로드"}</a> (새 파일 선택 시 교체됩니다)</div>`
     : `<div class="hint">등록된 파일이 없습니다. 새 파일을 선택해 주세요.</div>`;
