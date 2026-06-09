@@ -304,9 +304,9 @@ header {
 }
 
 .hero-eyebrow {
-  margin: 0 0 18px;
+  margin: 0 0 16px;
   font-family: "Cinzel", "Playfair Display", Georgia, serif;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.42em;
   text-transform: uppercase;
@@ -316,7 +316,7 @@ header {
 .hero-title {
   margin: 0;
   font-family: "Cinzel", "Playfair Display", Georgia, serif;
-  font-size: clamp(52px, 11vw, 108px);
+  font-size: clamp(44px, 9.5vw, 92px);
   font-weight: 700;
   line-height: 1.02;
   letter-spacing: 0.14em;
@@ -329,7 +329,7 @@ header {
   margin: 18px 0 0;
   max-width: 560px;
   font-family: "Playfair Display", Georgia, serif;
-  font-size: clamp(15px, 2.4vw, 22px);
+  font-size: clamp(14px, 2.2vw, 20px);
   font-weight: 400;
   font-style: italic;
   line-height: 1.55;
