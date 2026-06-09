@@ -226,7 +226,7 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 22px 28px 0;
+  padding: 12px 28px 0;
   margin-bottom: 0;
   background: transparent;
   border: none;
@@ -298,9 +298,9 @@ header {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 4vh 24px 11vh;
-  margin-top: -5vh;
-  min-height: min(70vh, 660px);
+  padding: 0 24px 4vh;
+  margin-top: -10vh;
+  min-height: min(50vh, 440px);
 }
 
 .hero-eyebrow {
@@ -326,7 +326,7 @@ header {
 }
 
 .hero-tagline {
-  margin: 26px 0 0;
+  margin: 18px 0 0;
   max-width: 560px;
   font-family: "Playfair Display", Georgia, serif;
   font-size: clamp(15px, 2.4vw, 22px);
@@ -340,7 +340,7 @@ header {
 .home-projects {
   width: 100%;
   max-width: 1120px;
-  margin: -4vh auto 0;
+  margin: -12vh auto 0;
   padding: 0 20px;
 }
 
