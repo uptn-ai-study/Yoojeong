@@ -13,3 +13,4 @@ create index if not exists iconhunt_rankings_score_idx
 alter table public.iconhunt_rankings enable row level security;
 
 revoke all on table public.iconhunt_rankings from anon, authenticated;
+grant select, insert, update, delete on public.iconhunt_rankings to service_role;
