@@ -1,0 +1,25 @@
+.screen-header {
+  margin-bottom: 24px;
+}
+
+.screen-header__row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.screen-header__back {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.screen-header__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}

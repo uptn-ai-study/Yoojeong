@@ -1,0 +1,86 @@
+.monthly-chart-screen {
+  min-height: 100dvh;
+  padding: 16px 0 calc(24px + var(--bottom-cta-safe-padding));
+}
+
+.monthly-chart-screen__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 28px;
+}
+
+.monthly-chart-screen__summary-label,
+.monthly-chart-screen__summary-amount {
+  display: block;
+  width: 100%;
+  text-align: right;
+}
+
+.monthly-chart-screen__empty {
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.monthly-chart-screen__chart {
+  padding: 20px 0;
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.monthly-chart-screen__bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  width: max-content;
+  min-width: 100%;
+  min-height: 240px;
+  padding: 24px 12px 0;
+}
+
+.monthly-chart-screen__bar-item {
+  flex: 0 0 auto;
+  min-width: 80px;
+  padding: 0 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.monthly-chart-screen__bar-amount {
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.monthly-chart-screen__bar-label {
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.monthly-chart-screen__bar-track {
+  width: 100%;
+  height: 160px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.monthly-chart-screen__bar-fill {
+  width: 100%;
+  max-width: 40px;
+  border-radius: 8px 8px 4px 4px;
+  transition: height 0.3s ease;
+}

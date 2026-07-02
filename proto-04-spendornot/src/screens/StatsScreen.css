@@ -1,0 +1,45 @@
+.stats-screen {
+  padding: 16px 0 0;
+}
+
+.stats-screen__header {
+  margin-bottom: 0;
+}
+
+.stats-screen__total-card {
+  margin-top: 8px;
+  padding: 24px;
+  border-radius: 16px;
+  color: #ffffff;
+  margin-bottom: 28px;
+  text-align: right;
+}
+
+.stats-screen__total-amount {
+  display: block;
+  width: 100%;
+  text-align: right;
+}
+
+.stats-screen__list {
+  list-style: none;
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.stats-screen__list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: var(--color-surface);
+}
+
+.stats-screen__list-item + .stats-screen__list-item {
+  border-top: 1px solid var(--color-border);
+}
+
+.stats-screen__list-section {
+  padding-bottom: var(--fixed-bottom-cta-clearance);
+}

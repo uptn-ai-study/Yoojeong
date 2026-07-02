@@ -1,0 +1,47 @@
+.nickname-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.nickname-modal {
+  width: 100%;
+  max-width: 340px;
+  padding: 28px 24px 24px;
+  border-radius: 20px;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.nickname-modal__desc {
+  line-height: 1.5;
+}
+
+.nickname-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nickname-modal__counter {
+  display: block;
+  width: 100%;
+  text-align: right;
+}
+
+.nickname-modal__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.nickname-modal__actions > * {
+  flex: 1;
+}
