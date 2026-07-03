@@ -1,4 +1,5 @@
 import { Paragraph } from '@toss/tds-mobile';
+import { APP_BUILD_ID } from '../constants/build';
 import './SplashScreen.css';
 
 export default function SplashScreen() {
@@ -20,6 +21,9 @@ export default function SplashScreen() {
         </div>
         <Paragraph.Text typography="t6" color="adaptive-grey-600" className="splash-screen__credit">
           By 엘리
+        </Paragraph.Text>
+        <Paragraph.Text typography="t7" color="adaptive-grey-500" className="splash-screen__build-id">
+          {APP_BUILD_ID}
         </Paragraph.Text>
       </div>
     </div>

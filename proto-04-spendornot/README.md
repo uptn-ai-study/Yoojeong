@@ -45,7 +45,23 @@ Vercel은 **브라우저에서 앱을 미리 보는 용도**로 쓰면 좋습니
 4. Output Directory: `dist`
 5. Deploy
 
-`vercel.json`에 SPA 라우팅 설정이 포함되어 있습니다.
+`vercel.json`에 SPA 라우팅과 **캐시 헤더**가 포함되어 있습니다.
+
+- `index.html` → `Cache-Control: no-cache, no-store, must-revalidate`
+- `assets/*` (해시 파일명) → `max-age=31536000, immutable`
+
+Vercel 재배포 후에도 구버전이 보이면 **Deployments → … → Redeploy** 또는 CDN 캐시 무효화를 실행하세요.
+
+## 캐시·배포 확인
+
+| 항목 | 설정 |
+|------|------|
+| **에셋 해시** | Vite 빌드 시 `assets/[name].[hash].js` 형식 |
+| **index.html** | Vercel `Cache-Control: no-cache` + HTML meta |
+| **빌드 ID** | 스플래시 하단 + `dist/build-meta.json` |
+| **토스 `.ait`** | 콘솔에 **새 파일 업로드** 필요 (파일명 동일해도 내용은 매 빌드 변경) |
+
+스플래시 화면 하단의 `20260703…` 형태 문자열이 바뀌면 새 빌드가 적용된 것입니다.
 
 ## 토스 미니앱 출시
 

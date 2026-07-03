@@ -49,6 +49,18 @@ export function applySafeAreaCssVars(insets: SafeAreaInsets) {
   }
 }
 
+let lastAppliedInsetsKey = '';
+
+export function applySafeAreaCssVarsIfChanged(insets: SafeAreaInsets) {
+  const nextKey = `${insets.top}:${insets.bottom}:${insets.left}:${insets.right}`;
+  if (nextKey === lastAppliedInsetsKey) {
+    return;
+  }
+
+  lastAppliedInsetsKey = nextKey;
+  applySafeAreaCssVars(insets);
+}
+
 export function resolveNativeSafeAreaInsets(): SafeAreaInsets | null {
   try {
     return TossSafeAreaInsets.get();

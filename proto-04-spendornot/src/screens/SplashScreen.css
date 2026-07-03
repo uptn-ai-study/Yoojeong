@@ -37,6 +37,14 @@
 
 .splash-screen__credit {
   margin-top: auto;
-  padding-bottom: calc(var(--bottom-cta-safe-padding) + 56px);
+  padding-bottom: 0;
   letter-spacing: 0.02em;
+}
+
+.splash-screen__build-id {
+  margin-top: auto;
+  padding-bottom: calc(var(--bottom-cta-safe-padding) + 56px);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  opacity: 0.55;
 }

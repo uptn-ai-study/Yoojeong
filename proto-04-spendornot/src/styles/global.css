@@ -22,8 +22,8 @@
     var(--app-safe-area-bottom),
     env(safe-area-inset-bottom, 0px)
   );
-  --bottom-cta-extra-lift: clamp(32px, 4.8dvh, 52px);
-  --bottom-cta-min-total: 72px;
+  --bottom-cta-extra-lift: clamp(40px, 6dvh, 64px);
+  --bottom-cta-min-total: 88px;
   --bottom-cta-safe-padding: max(
     calc(var(--bottom-cta-safe-area) + var(--bottom-cta-extra-lift)),
     var(--bottom-cta-min-total)

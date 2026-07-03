@@ -1,22 +1,22 @@
 import { useLayoutEffect } from 'react';
 import { SafeAreaInsets } from '@apps-in-toss/web-framework';
-import { applySafeAreaCssVars, readBrowserSafeAreaInsets } from '../utils/safeArea';
+import { applySafeAreaCssVarsIfChanged, readBrowserSafeAreaInsets } from '../utils/safeArea';
 
 export default function SafeAreaSync() {
   useLayoutEffect(() => {
     let cleanupNative: (() => void) | undefined;
 
     try {
-      applySafeAreaCssVars(SafeAreaInsets.get());
+      applySafeAreaCssVarsIfChanged(SafeAreaInsets.get());
       cleanupNative = SafeAreaInsets.subscribe({
-        onEvent: (insets) => applySafeAreaCssVars(insets),
+        onEvent: (insets) => applySafeAreaCssVarsIfChanged(insets),
       });
     } catch {
-      applySafeAreaCssVars(readBrowserSafeAreaInsets());
+      applySafeAreaCssVarsIfChanged(readBrowserSafeAreaInsets());
     }
 
     const syncBrowserInsets = () => {
-      applySafeAreaCssVars(readBrowserSafeAreaInsets());
+      applySafeAreaCssVarsIfChanged(readBrowserSafeAreaInsets());
     };
 
     window.addEventListener('resize', syncBrowserInsets);
