@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { SafeAreaInsets } from '@apps-in-toss/web-framework';
 import { applySafeAreaCssVars, readBrowserSafeAreaInsets } from '../utils/safeArea';
 
 export default function SafeAreaSync() {
-  useEffect(() => {
+  useLayoutEffect(() => {
     let cleanupNative: (() => void) | undefined;
 
     try {

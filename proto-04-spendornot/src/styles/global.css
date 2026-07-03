@@ -17,8 +17,17 @@
     var(--toss-safe-area-bottom, 0px),
     env(safe-area-inset-bottom, 0px)
   );
-  --bottom-cta-lift: 28px;
-  --bottom-cta-safe-padding: calc(max(var(--app-safe-area-bottom), 20px) + var(--bottom-cta-lift));
+  /* 하단 CTA — safe area + 추가 lift, 기기별 최소값 보장 */
+  --bottom-cta-safe-area: max(
+    var(--app-safe-area-bottom),
+    env(safe-area-inset-bottom, 0px)
+  );
+  --bottom-cta-extra-lift: clamp(32px, 4.8dvh, 52px);
+  --bottom-cta-min-total: 72px;
+  --bottom-cta-safe-padding: max(
+    calc(var(--bottom-cta-safe-area) + var(--bottom-cta-extra-lift)),
+    var(--bottom-cta-min-total)
+  );
   --fixed-bottom-cta-clearance: calc(72px + var(--bottom-cta-safe-padding));
   --record-footer-clearance: calc(132px + var(--bottom-cta-safe-padding));
   /* iPhone·Android 공통 — 좁은 화면 24px, 넓은 화면까지 점진 확대 + 노치 safe area */
