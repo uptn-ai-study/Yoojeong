@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Paragraph } from '@toss/tds-mobile';
-import AppFixedBottomCTA from '../components/AppFixedBottomCTA';
+import { Button, Paragraph } from '@toss/tds-mobile';
 import StatsQuickNav from '../components/StatsQuickNav';
 import ScreenHeader from '../components/ScreenHeader';
 import { BRAND_PRIMARY_COLOR } from '../constants/brand';
@@ -58,52 +57,58 @@ export default function StatsPeriodScreen({ period }: StatsPeriodScreenProps) {
   };
 
   return (
-    <div className="screen stats-screen screen--fixed-bottom-cta">
-      <header className="stats-screen__header">
-        <ScreenHeader
-          title={
-            <>
-              {title.line1}
-              <br />
-              {title.line2}
-            </>
-          }
-          subtitle={period === 'weekly' ? weekRange : undefined}
-          onBack={() => navigate('/home')}
-        />
-        <StatsQuickNav />
-      </header>
+    <div className="screen stats-screen screen-with-bottom-footer">
+      <div className="stats-screen__body screen-with-bottom-footer__body">
+        <header className="stats-screen__header">
+          <ScreenHeader
+            title={
+              <>
+                {title.line1}
+                <br />
+                {title.line2}
+              </>
+            }
+            subtitle={period === 'weekly' ? weekRange : undefined}
+            onBack={() => navigate('/home')}
+          />
+          <StatsQuickNav />
+        </header>
 
-      <section className="stats-screen__total-card" style={{ backgroundColor: BRAND_PRIMARY_COLOR }}>
-        <Paragraph.Text
-          typography="t1"
-          fontWeight="bold"
-          color="#ffffff"
-          className="stats-screen__total-amount"
-        >
-          {formatAmount(total)}원
-        </Paragraph.Text>
-      </section>
+        <section className="stats-screen__total-card" style={{ backgroundColor: BRAND_PRIMARY_COLOR }}>
+          <Paragraph.Text
+            typography="t1"
+            fontWeight="bold"
+            color="#ffffff"
+            className="stats-screen__total-amount"
+          >
+            {formatAmount(total)}원
+          </Paragraph.Text>
+        </section>
 
-      <section className="stats-screen__list-section">
-        <ul className="stats-screen__list">
-          {CATEGORIES.map((category) => {
-            const amount = getCategoryTotal(category);
-            return (
-              <li key={category} className="stats-screen__list-item">
-                <Paragraph.Text typography="t5" fontWeight="semibold">
-                  {category}
-                </Paragraph.Text>
-                <Paragraph.Text typography="t5" fontWeight="bold">
-                  {formatAmount(amount)}원
-                </Paragraph.Text>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+        <section className="stats-screen__list-section">
+          <ul className="stats-screen__list">
+            {CATEGORIES.map((category) => {
+              const amount = getCategoryTotal(category);
+              return (
+                <li key={category} className="stats-screen__list-item">
+                  <Paragraph.Text typography="t5" fontWeight="semibold">
+                    {category}
+                  </Paragraph.Text>
+                  <Paragraph.Text typography="t5" fontWeight="bold">
+                    {formatAmount(amount)}원
+                  </Paragraph.Text>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      </div>
 
-      <AppFixedBottomCTA onClick={() => navigate('/stats/monthly-chart')}>월별 통계</AppFixedBottomCTA>
+      <footer className="screen-bottom-footer stats-screen__footer">
+        <Button display="full" size="xlarge" onClick={() => navigate('/stats/monthly-chart')}>
+          월별 통계
+        </Button>
+      </footer>
     </div>
   );
 }

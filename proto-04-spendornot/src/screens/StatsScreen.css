@@ -2,6 +2,10 @@
   padding: 16px 0 0;
 }
 
+.stats-screen__body {
+  padding-bottom: 8px;
+}
+
 .stats-screen__header,
 .stats-screen__list-section {
   padding-left: var(--screen-padding-left);
@@ -49,5 +53,5 @@
 }
 
 .stats-screen__list-section {
-  padding-bottom: var(--fixed-bottom-cta-clearance);
+  padding-bottom: 8px;
 }

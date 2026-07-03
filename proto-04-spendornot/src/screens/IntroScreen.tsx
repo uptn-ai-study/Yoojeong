@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Paragraph } from '@toss/tds-mobile';
-import AppFixedBottomCTA from '../components/AppFixedBottomCTA';
+import { Button, Paragraph } from '@toss/tds-mobile';
 import { useAppStore } from '../store/useAppStore';
 import './IntroScreen.css';
 
@@ -14,7 +13,7 @@ export default function IntroScreen() {
   };
 
   return (
-    <div className="screen intro-screen screen--fixed-bottom-cta">
+    <div className="screen intro-screen">
       <div className="intro-screen__body">
         <section className="intro-screen__group intro-screen__group--label" aria-label="앱 유형">
           <Paragraph.Text typography="t6" color="adaptive-grey-600">
@@ -60,7 +59,11 @@ export default function IntroScreen() {
           </ul>
         </section>
       </div>
-      <AppFixedBottomCTA onClick={handleStart}>시작하기</AppFixedBottomCTA>
+      <footer className="screen-bottom-footer intro-screen__footer">
+        <Button display="full" size="xlarge" onClick={handleStart}>
+          시작하기
+        </Button>
+      </footer>
     </div>
   );
 }

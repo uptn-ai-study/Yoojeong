@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Paragraph } from '@toss/tds-mobile';
-import AppFixedBottomCTA from '../components/AppFixedBottomCTA';
 import NicknameModal from '../components/NicknameModal';
 import { useAppStore } from '../store/useAppStore';
 import { formatAmount, getCurrentMonth } from '../utils/format';
@@ -62,7 +61,7 @@ export default function HomeScreen() {
   const month = getCurrentMonth();
 
   return (
-    <div className="screen home-screen screen--fixed-bottom-cta">
+    <div className="screen home-screen">
       {showNicknameModal && (
         <NicknameModal
           mode="initial"
@@ -130,7 +129,11 @@ export default function HomeScreen() {
         </div>
       </header>
 
-      <AppFixedBottomCTA onClick={() => navigate('/record')}>안 썼어요 기록하기</AppFixedBottomCTA>
+      <footer className="screen-bottom-footer home-screen__footer">
+        <Button display="full" size="xlarge" onClick={() => navigate('/record')}>
+          안 썼어요 기록하기
+        </Button>
+      </footer>
     </div>
   );
 }

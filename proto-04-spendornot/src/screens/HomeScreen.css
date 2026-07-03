@@ -1,7 +1,10 @@
 .home-screen {
   position: relative;
+  height: 100dvh;
   min-height: 100dvh;
   overflow: hidden;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .home-screen__image-wrap {
@@ -84,4 +87,10 @@
 
 .home-screen__edit-name:active {
   background: #f2f4f6;
+}
+
+.home-screen__footer {
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
 }

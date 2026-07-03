@@ -1,5 +1,0 @@
-/* TDS FixedBottomCTA는 hasPaddingBottom=false 시 paddingBottom:0으로 containerStyle을 덮어씁니다. */
-.app-bottom-cta {
-  bottom: var(--bottom-cta-safe-padding) !important;
-  padding-bottom: 0 !important;
-}

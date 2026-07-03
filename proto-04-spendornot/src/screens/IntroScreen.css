@@ -4,7 +4,6 @@
   min-height: 100dvh;
   overflow: hidden;
   padding-top: calc(clamp(12px, 2.5dvh, 32px) + var(--safe-area-top));
-  padding-bottom: var(--fixed-bottom-cta-clearance);
   box-sizing: border-box;
 }
 
@@ -73,6 +72,10 @@
   left: 0;
   color: var(--color-primary);
   font-weight: 700;
+}
+
+.intro-screen__footer {
+  padding-top: clamp(12px, 2dvh, 20px);
 }
 
 @media (max-height: 700px) {

@@ -28,8 +28,6 @@
     calc(var(--bottom-cta-safe-area) + var(--bottom-cta-extra-lift)),
     var(--bottom-cta-min-total)
   );
-  --fixed-bottom-cta-clearance: calc(72px + var(--bottom-cta-safe-padding));
-  --record-footer-clearance: calc(132px + var(--bottom-cta-safe-padding));
   /* iPhone·Android 공통 — 좁은 화면 24px, 넓은 화면까지 점진 확대 + 노치 safe area */
   --screen-gutter: clamp(24px, 5.5vw, 36px);
   --screen-padding-left: calc(var(--screen-gutter) + var(--safe-area-left));
@@ -89,10 +87,45 @@ a {
   padding-right: var(--screen-padding-right);
 }
 
-/* FixedBottomCTA — HomeScreen·IntroScreen과 동일한 하단 여백·가로 폭 */
-.screen--fixed-bottom-cta {
-  padding-left: 0;
-  padding-right: 0;
+/* 하단 액션 — flex 푸터 (토스 웹뷰에서 fixed CTA보다 안정적) */
+.screen-with-bottom-footer {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.screen-with-bottom-footer__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.screen-bottom-footer {
+  flex-shrink: 0;
+  padding: 12px var(--screen-padding-right) var(--bottom-cta-safe-padding)
+    var(--screen-padding-left);
+}
+
+.screen-bottom-footer--bordered {
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.screen-bottom-footer__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.screen-bottom-footer__actions > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.screen-bottom-footer__actions button {
+  border-left: none !important;
+  border-right: none !important;
 }
 
 .btn-primary {
