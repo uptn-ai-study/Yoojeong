@@ -1,5 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { resolveTossUserKey } from '../lib/tossUser';
+import {
+  deleteCloudRecord,
+  fetchCloudProfile,
+  fetchCloudRecords,
+  upsertCloudProfile,
+  upsertCloudRecord,
+  upsertCloudRecords,
+} from '../services/supabaseData';
 import type { Category, MonthlyStat, Record, ViewMode } from '../types';
 import { isSameDay, isSameWeek } from '../utils/dateRange';
 import { isSameMonth } from '../utils/format';
@@ -11,6 +21,7 @@ interface PersistedSlice {
   hasSeenIntro?: boolean;
   hasSetNickname?: boolean;
   user?: { name?: string };
+  tossUserKey?: string;
 }
 
 interface AppState {
@@ -19,6 +30,10 @@ interface AppState {
   viewMode: ViewMode;
   hasSeenIntro: boolean;
   hasSetNickname: boolean;
+  tossUserKey: string | null;
+  isCloudEnabled: boolean;
+  isCloudReady: boolean;
+  syncError: string | null;
   setViewMode: (mode: ViewMode) => void;
   toggleViewMode: () => void;
   setHasSeenIntro: (value: boolean) => void;
@@ -26,6 +41,7 @@ interface AppState {
   addRecord: (date: string, category: Category, amount: number, memo?: string) => void;
   deleteRecord: (id: string) => void;
   seedJuneTestData: () => void;
+  initializeFromCloud: () => Promise<void>;
   getTotalAmount: () => number;
   getTotalCategoryTotal: (category: Category) => number;
   getDailyTotal: (day?: Date) => number;
@@ -44,7 +60,7 @@ function generateId(): string {
 
 function normalizePersistedState(persisted: PersistedSlice | undefined, currentState: AppState): AppState {
   const userName = typeof persisted?.user?.name === 'string' ? persisted.user.name : '';
-  const hasNickname = persisted?.hasSetNickname === true;
+  const hasNickname = persisted?.hasSetNickname === true || userName.length > 0;
 
   return {
     ...currentState,
@@ -53,7 +69,23 @@ function normalizePersistedState(persisted: PersistedSlice | undefined, currentS
     hasSeenIntro: persisted?.hasSeenIntro === true,
     hasSetNickname: hasNickname,
     user: { name: userName },
+    tossUserKey: typeof persisted?.tossUserKey === 'string' ? persisted.tossUserKey : null,
   };
+}
+
+function getProfileSnapshot(state: AppState) {
+  return {
+    nickname: state.user.name,
+    viewMode: state.viewMode,
+    hasSeenIntro: state.hasSeenIntro,
+  };
+}
+
+let cloudInitPromise: Promise<void> | null = null;
+
+async function syncProfile(state: AppState): Promise<void> {
+  if (!state.isCloudEnabled || !state.tossUserKey) return;
+  await upsertCloudProfile(state.tossUserKey, getProfileSnapshot(state));
 }
 
 export const useAppStore = create<AppState>()(
@@ -64,17 +96,40 @@ export const useAppStore = create<AppState>()(
       viewMode: 'bill',
       hasSeenIntro: false,
       hasSetNickname: false,
+      tossUserKey: null,
+      isCloudEnabled: isSupabaseConfigured(),
+      isCloudReady: !isSupabaseConfigured(),
+      syncError: null,
 
-      setViewMode: (mode) => set({ viewMode: mode }),
+      setViewMode: (mode) => {
+        set({ viewMode: mode });
+        void syncProfile(get()).catch((error: unknown) => {
+          set({ syncError: error instanceof Error ? error.message : '프로필 동기화에 실패했습니다.' });
+        });
+      },
 
-      toggleViewMode: () =>
+      toggleViewMode: () => {
         set((state) => ({
           viewMode: state.viewMode === 'bill' ? 'fish' : 'bill',
-        })),
+        }));
+        void syncProfile(get()).catch((error: unknown) => {
+          set({ syncError: error instanceof Error ? error.message : '프로필 동기화에 실패했습니다.' });
+        });
+      },
 
-      setHasSeenIntro: (value) => set({ hasSeenIntro: value }),
+      setHasSeenIntro: (value) => {
+        set({ hasSeenIntro: value });
+        void syncProfile(get()).catch((error: unknown) => {
+          set({ syncError: error instanceof Error ? error.message : '프로필 동기화에 실패했습니다.' });
+        });
+      },
 
-      setUserName: (name) => set({ user: { name }, hasSetNickname: true }),
+      setUserName: (name) => {
+        set({ user: { name }, hasSetNickname: true });
+        void syncProfile(get()).catch((error: unknown) => {
+          set({ syncError: error instanceof Error ? error.message : '프로필 동기화에 실패했습니다.' });
+        });
+      },
 
       addRecord: (date, category, amount, memo) => {
         const trimmedMemo = memo?.trim();
@@ -85,21 +140,37 @@ export const useAppStore = create<AppState>()(
           amount,
           ...(trimmedMemo ? { memo: trimmedMemo } : {}),
         };
+
         set((state) => ({ records: [...(state.records ?? []), newRecord] }));
+
+        const { isCloudEnabled, tossUserKey } = get();
+        if (!isCloudEnabled || !tossUserKey) return;
+
+        void (async () => {
+          await upsertCloudProfile(tossUserKey, getProfileSnapshot(get()));
+          await upsertCloudRecord(tossUserKey, newRecord);
+        })().catch((error: unknown) => {
+          set({ syncError: error instanceof Error ? error.message : '기록 저장에 실패했습니다.' });
+        });
       },
 
       deleteRecord: (id) => {
         set((state) => ({
           records: (state.records ?? []).filter((record) => record.id !== id),
         }));
+
+        const { isCloudEnabled, tossUserKey } = get();
+        if (!isCloudEnabled || !tossUserKey) return;
+
+        void deleteCloudRecord(tossUserKey, id).catch((error: unknown) => {
+          set({ syncError: error instanceof Error ? error.message : '기록 삭제에 실패했습니다.' });
+        });
       },
 
       seedJuneTestData: () => {
         set((state) => {
           const existingIds = new Set((state.records ?? []).map((record) => record.id));
-          const recordsToAdd = JUNE_TEST_RECORDS.filter(
-            (record) => !existingIds.has(record.id),
-          );
+          const recordsToAdd = JUNE_TEST_RECORDS.filter((record) => !existingIds.has(record.id));
 
           if (recordsToAdd.length === 0) {
             return state;
@@ -107,6 +178,82 @@ export const useAppStore = create<AppState>()(
 
           return { records: [...(state.records ?? []), ...recordsToAdd] };
         });
+
+        const { isCloudEnabled, tossUserKey } = get();
+        if (!isCloudEnabled || !tossUserKey) return;
+
+        void (async () => {
+          await upsertCloudProfile(tossUserKey, getProfileSnapshot(get()));
+          await upsertCloudRecords(tossUserKey, get().records ?? []);
+        })().catch((error: unknown) => {
+          set({ syncError: error instanceof Error ? error.message : '테스트 데이터 동기화에 실패했습니다.' });
+        });
+      },
+
+      initializeFromCloud: async () => {
+        if (!get().isCloudEnabled) {
+          set({ isCloudReady: true });
+          return;
+        }
+
+        if (cloudInitPromise) {
+          await cloudInitPromise;
+          return;
+        }
+
+        cloudInitPromise = (async () => {
+          try {
+            const tossUserKey = await resolveTossUserKey();
+            const localState = get();
+
+            const [cloudProfile, cloudRecords] = await Promise.all([
+              fetchCloudProfile(tossUserKey),
+              fetchCloudRecords(tossUserKey),
+            ]);
+
+            if (cloudProfile) {
+              const nickname = cloudProfile.nickname;
+              set({
+                tossUserKey,
+                user: { name: nickname },
+                hasSetNickname: nickname.length > 0,
+                viewMode: cloudProfile.viewMode,
+                hasSeenIntro: cloudProfile.hasSeenIntro,
+                records: cloudRecords,
+                isCloudReady: true,
+                syncError: null,
+              });
+              return;
+            }
+
+            const localRecords = localState.records ?? [];
+            await upsertCloudProfile(tossUserKey, {
+              nickname: localState.user.name,
+              viewMode: localState.viewMode,
+              hasSeenIntro: localState.hasSeenIntro,
+            });
+
+            const recordsToUpload = get().records ?? localRecords;
+            if (recordsToUpload.length > 0) {
+              await upsertCloudRecords(tossUserKey, recordsToUpload);
+            }
+
+            set({
+              tossUserKey,
+              isCloudReady: true,
+              syncError: null,
+            });
+          } catch (error) {
+            set({
+              isCloudReady: true,
+              syncError: error instanceof Error ? error.message : '클라우드 데이터를 불러오지 못했습니다.',
+            });
+          } finally {
+            cloudInitPromise = null;
+          }
+        })();
+
+        await cloudInitPromise;
       },
 
       getTotalAmount: () =>
@@ -177,6 +324,7 @@ export const useAppStore = create<AppState>()(
         hasSeenIntro: state.hasSeenIntro,
         hasSetNickname: state.hasSetNickname,
         user: state.user,
+        tossUserKey: state.tossUserKey,
       }),
       merge: (persistedState, currentState) =>
         normalizePersistedState(persistedState as PersistedSlice | undefined, currentState),

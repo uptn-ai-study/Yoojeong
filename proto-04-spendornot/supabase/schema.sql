@@ -1,5 +1,6 @@
--- 쓸까말까 — Supabase 스키마 (향후 연동용)
+-- 쓸까말까 — Supabase 스키마
 -- 토스 사용자 키(toss_user_key)로 사용자별 데이터를 분리합니다.
+-- 클라이언트는 x-toss-user-key 헤더와 RLS로 본인 데이터만 접근합니다.
 
 create table if not exists profiles (
   id uuid primary key default gen_random_uuid(),
@@ -24,8 +25,58 @@ create table if not exists records (
 create index if not exists records_toss_user_key_date_idx
   on records (toss_user_key, record_date desc);
 
+-- 요청 헤더에서 toss user key 읽기 (Supabase PostgREST)
+create or replace function public.request_toss_user_key()
+returns text
+language sql
+stable
+as $$
+  select coalesce(
+    nullif(current_setting('request.headers', true), '')::json->>'x-toss-user-key',
+    ''
+  );
+$$;
+
 alter table profiles enable row level security;
 alter table records enable row level security;
 
--- 실제 운영 시: 토스 로그인 + Supabase Auth 또는 Edge Function으로
--- toss_user_key 검증 후 RLS 정책을 적용하세요.
+drop policy if exists "profiles_select_own" on profiles;
+drop policy if exists "profiles_insert_own" on profiles;
+drop policy if exists "profiles_update_own" on profiles;
+drop policy if exists "records_select_own" on records;
+drop policy if exists "records_insert_own" on records;
+drop policy if exists "records_update_own" on records;
+drop policy if exists "records_delete_own" on records;
+
+create policy "profiles_select_own"
+  on profiles for select
+  using (toss_user_key = public.request_toss_user_key());
+
+create policy "profiles_insert_own"
+  on profiles for insert
+  with check (toss_user_key = public.request_toss_user_key());
+
+create policy "profiles_update_own"
+  on profiles for update
+  using (toss_user_key = public.request_toss_user_key())
+  with check (toss_user_key = public.request_toss_user_key());
+
+create policy "records_select_own"
+  on records for select
+  using (toss_user_key = public.request_toss_user_key());
+
+create policy "records_insert_own"
+  on records for insert
+  with check (toss_user_key = public.request_toss_user_key());
+
+create policy "records_update_own"
+  on records for update
+  using (toss_user_key = public.request_toss_user_key())
+  with check (toss_user_key = public.request_toss_user_key());
+
+create policy "records_delete_own"
+  on records for delete
+  using (toss_user_key = public.request_toss_user_key());
+
+-- 참고: anon key + 헤더 기반 RLS는 개발·MVP용입니다.
+-- 정식 운영 시 토스 appLogin authorizationCode 검증 Edge Function + JWT 연동을 권장합니다.

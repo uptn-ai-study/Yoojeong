@@ -1,13 +1,12 @@
 # 쓸까말까
 
-안 쓴 돈을 기록하는 토스 미니앱(웹뷰) 프로토타입입니다.  
-[Yoojeong](https://github.com/uptn-ai-study/Yoojeong) 모노레포의 `proto-04-spendornot` 폴더에 포함되어 있습니다.
+안 쓴 돈을 기록하는 토스 미니앱(웹뷰) 프로젝트입니다.
 
 ## 기술 스택
 
 - React 18 + TypeScript + Vite
 - React Router v6
-- Zustand (로컬 저장: `localStorage`)
+- Zustand + Supabase (클라우드 저장, 환경 변수 없으면 `localStorage` 폴백)
 - [@toss/tds-mobile](https://tossmini-docs.toss.im/tds-mobile/start/) + `@toss/tds-mobile-ait` (토스 디자인 시스템)
 - [@apps-in-toss/web-framework](https://developers-apps-in-toss.toss.im/tutorials/webview.html) (토스 미니앱 번들)
 
@@ -21,22 +20,30 @@ npm run dev:vite     # 일반 Vite만 사용
 
 테스트 데이터: `?seed=1` · 초기화: `?reset=1`
 
-## 저장소
+## GitHub 업로드
 
-이 프로젝트는 [Yoojeong](https://github.com/uptn-ai-study/Yoojeong) 모노레포의 `proto-04-spendornot` 폴더에 있습니다.
+1. [앱인토스 개발자센터](https://developers-apps-in-toss.toss.im/)에서 앱 등록
+2. `granite.config.ts`의 `appName`, `brand.displayName`, `brand.icon`을 콘솔 값과 맞춤
+3. GitHub에 새 저장소 생성 후 push:
 
-토스 미니앱 등록 시 `granite.config.ts`의 `appName`, `brand.displayName`, `brand.icon`을 [앱인토스 개발자센터](https://developers-apps-in-toss.toss.im/) 값과 맞춥니다.
+```bash
+git init
+git add .
+git commit -m "Initial commit: 쓸까말까 미니앱"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/spendornot.git
+git push -u origin main
+```
 
 ## Vercel 배포 (웹 미리보기·테스트용)
 
 Vercel은 **브라우저에서 앱을 미리 보는 용도**로 쓰면 좋습니다. 토스 앱 **정식 출시**는 아래「토스 미니앱 출시」절의 `.ait` 번들 업로드가 필요합니다.
 
-1. [vercel.com](https://vercel.com) → Import Git Repository → `uptn-ai-study/Yoojeong`
-2. **Root Directory:** `proto-04-spendornot`
-3. Framework Preset: **Vite**
-4. Build Command: `npm run build`
-5. Output Directory: `dist`
-6. Deploy
+1. [vercel.com](https://vercel.com) → Import Git Repository
+2. Framework Preset: **Vite**
+3. Build Command: `npm run build`
+4. Output Directory: `dist`
+5. Deploy
 
 `vercel.json`에 SPA 라우팅 설정이 포함되어 있습니다.
 
@@ -54,23 +61,43 @@ npm run build:toss   # spendornot.ait 생성
 
 > 레벨 배경 이미지는 WebP(960px)로 최적화되어 있습니다. `.ait` 번들 약 4MB. 원본 PNG 교체 시 `npm run optimize-images` 실행.
 
-## 데이터 저장 — Supabase가 필요한가?
+## Supabase 연동 (사용자 데이터 저장)
 
-| 방식 | 설명 |
-|------|------|
-| **현재 (localStorage)** | 기기·브라우저마다 따로 저장. 앱 삭제·캐시 삭제·기기 변경 시 데이터 소실 |
-| **Supabase (권장)** | 사용자별 별명·기록을 서버에 영구 저장. 기기 바꿔도 유지 |
+별명·기록·통계·월별 차트 데이터는 모두 `records`와 `profiles`에서 계산·저장됩니다. Vercel 연동은 **필수가 아닙니다**.
 
-**결론:** 사용자별로 별명과 기록이 **안전하게 남아야** 한다면 **Supabase(또는 다른 DB) 연동이 필요**합니다. Vercel만으로는 정적 파일 호스팅만 가능하고, 사용자 데이터는 저장할 수 없습니다.
+### 1. Supabase 프로젝트 설정
 
-권장 흐름:
+1. [supabase.com](https://supabase.com)에서 프로젝트 생성
+2. SQL Editor에서 [`supabase/schema.sql`](./supabase/schema.sql) 실행
+3. Project Settings → API에서 URL과 `anon` key 복사
 
-1. 앱인토스 **토스 로그인**으로 사용자 식별 (`toss_user_key`)
-2. Supabase에 `profiles`(별명) · `records`(기록) 테이블 저장
-3. 스키마 예시: [`supabase/schema.sql`](./supabase/schema.sql)
-4. 환경 변수: [`.env.example`](./.env.example) 참고
+### 2. 환경 변수
 
-지금은 **localStorage로 동작**하며, Supabase 연동은 다음 단계에서 `VITE_SUPABASE_*` 환경 변수 설정 후 스토어를 API와 동기화하면 됩니다.
+`.env` 파일 생성 ([`.env.example`](./.env.example) 참고):
+
+```bash
+VITE_SUPABASE_URL=https://xxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...
+```
+
+- **로컬:** `.env`에 설정 후 `npm run dev`
+- **Vercel:** Project Settings → Environment Variables에 동일 키 추가
+- **토스 `.ait` 빌드:** `npm run build:toss` 전에 `.env`에 값이 있어야 번들에 포함됩니다
+
+환경 변수가 없으면 기존처럼 `localStorage`만 사용합니다.
+
+### 3. 사용자 식별
+
+토스 앱에서는 [`getAnonymousKey`](https://developers-apps-in-toss.toss.im/)로 사용자별 해시 키를 받아 Supabase `toss_user_key`로 사용합니다. 브라우저 개발 환경에서는 기기별 dev 키로 동작합니다.
+
+### 4. 저장 구조
+
+| 테이블 | 저장 내용 |
+|--------|-----------|
+| `profiles` | 별명, viewMode(지폐/물고기), 인트로 완료 여부 |
+| `records` | 날짜·카테고리·금액·메모 (통계·월별 차트는 여기서 집계) |
+
+> RLS는 `x-toss-user-key` 헤더 기반입니다. 정식 운영 시 토스 `appLogin` 검증 Edge Function 연동을 권장합니다.
 
 ## 프로젝트 구조
 
@@ -78,8 +105,9 @@ npm run build:toss   # spendornot.ait 생성
 src/
   screens/       # 화면
   components/    # 공통 UI
-  store/         # Zustand 상태
-  utils/         # 날짜·레벨·포맷
+  store/         # Zustand 상태 + Supabase 동기화
+  services/      # Supabase CRUD
+  lib/           # Supabase 클라이언트, 토스 사용자 키
 public/images/   # 레벨 배경 이미지
 granite.config.ts
 vercel.json

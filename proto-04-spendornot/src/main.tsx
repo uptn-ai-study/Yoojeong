@@ -3,19 +3,22 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { TDSMobileAITProvider } from '@toss/tds-mobile-ait';
 import SafeAreaSync from './components/SafeAreaSync';
+import CloudSyncBootstrap from './components/CloudSyncBootstrap';
 import App from './App';
 import { useAppStore } from './store/useAppStore';
+import { isSupabaseConfigured } from './lib/supabase';
 import { BRAND_PRIMARY_COLOR } from './constants/brand';
 import './styles/global.css';
 
 if (new URLSearchParams(window.location.search).get('reset') === '1') {
   localStorage.removeItem('spendornot-storage');
+  localStorage.removeItem('spendornot-dev-toss-user-key');
   window.history.replaceState({}, '', window.location.pathname);
 }
 
 const shouldSeedJune =
   new URLSearchParams(window.location.search).get('seed') === '1' ||
-  import.meta.env.DEV;
+  (import.meta.env.DEV && !isSupabaseConfigured());
 
 if (shouldSeedJune) {
   useAppStore.persist.onFinishHydration(() => {
@@ -35,6 +38,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <TDSMobileAITProvider brandPrimaryColor={BRAND_PRIMARY_COLOR}>
       <SafeAreaSync />
+      <CloudSyncBootstrap />
       <App />
     </TDSMobileAITProvider>
   </StrictMode>,
