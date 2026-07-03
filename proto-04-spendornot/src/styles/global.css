@@ -17,7 +17,8 @@
     var(--toss-safe-area-bottom, 0px),
     env(safe-area-inset-bottom, 0px)
   );
-  --bottom-cta-safe-padding: max(var(--app-safe-area-bottom), 20px);
+  --bottom-cta-lift: 28px;
+  --bottom-cta-safe-padding: calc(max(var(--app-safe-area-bottom), 20px) + var(--bottom-cta-lift));
   --fixed-bottom-cta-clearance: calc(72px + var(--bottom-cta-safe-padding));
   --record-footer-clearance: calc(132px + var(--bottom-cta-safe-padding));
   /* iPhone·Android 공통 — 좁은 화면 24px, 넓은 화면까지 점진 확대 + 노치 safe area */
@@ -77,6 +78,12 @@ a {
   background: var(--color-surface);
   padding-left: var(--screen-padding-left);
   padding-right: var(--screen-padding-right);
+}
+
+/* FixedBottomCTA — HomeScreen·IntroScreen과 동일한 하단 여백·가로 폭 */
+.screen--fixed-bottom-cta {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .btn-primary {

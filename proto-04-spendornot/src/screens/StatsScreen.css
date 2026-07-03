@@ -2,12 +2,20 @@
   padding: 16px 0 0;
 }
 
+.stats-screen__header,
+.stats-screen__list-section {
+  padding-left: var(--screen-padding-left);
+  padding-right: var(--screen-padding-right);
+}
+
 .stats-screen__header {
   margin-bottom: 0;
 }
 
 .stats-screen__total-card {
   margin-top: 8px;
+  margin-left: var(--screen-padding-left);
+  margin-right: var(--screen-padding-right);
   padding: 24px;
   border-radius: 16px;
   color: #ffffff;

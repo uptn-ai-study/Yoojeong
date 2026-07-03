@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { FixedBottomCTA, Paragraph } from '@toss/tds-mobile';
+import { Paragraph } from '@toss/tds-mobile';
+import AppFixedBottomCTA from '../components/AppFixedBottomCTA';
 import StatsQuickNav from '../components/StatsQuickNav';
 import ScreenHeader from '../components/ScreenHeader';
 import { BRAND_PRIMARY_COLOR } from '../constants/brand';
@@ -57,7 +58,7 @@ export default function StatsPeriodScreen({ period }: StatsPeriodScreenProps) {
   };
 
   return (
-    <div className="screen stats-screen">
+    <div className="screen stats-screen screen--fixed-bottom-cta">
       <header className="stats-screen__header">
         <ScreenHeader
           title={
@@ -102,7 +103,7 @@ export default function StatsPeriodScreen({ period }: StatsPeriodScreenProps) {
         </ul>
       </section>
 
-      <FixedBottomCTA onClick={() => navigate('/stats/monthly-chart')}>월별 통계</FixedBottomCTA>
+      <AppFixedBottomCTA onClick={() => navigate('/stats/monthly-chart')}>월별 통계</AppFixedBottomCTA>
     </div>
   );
 }

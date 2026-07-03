@@ -2,8 +2,6 @@
   position: relative;
   min-height: 100dvh;
   overflow: hidden;
-  padding-left: 0;
-  padding-right: 0;
 }
 
 .home-screen__image-wrap {
