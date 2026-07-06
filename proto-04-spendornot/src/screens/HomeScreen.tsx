@@ -5,6 +5,7 @@ import NicknameModal from '../components/NicknameModal';
 import { useAppStore } from '../store/useAppStore';
 import { formatAmount, getCurrentMonth } from '../utils/format';
 import { getLevelImage } from '../utils/level';
+import { MAX_NICKNAME_LENGTH } from '../types';
 import './HomeScreen.css';
 
 function PencilIcon() {
@@ -17,16 +18,6 @@ function PencilIcon() {
         strokeLinejoin="round"
       />
       <path d="M13.5 6.5l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function StatsIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="4" y="12" width="4" height="8" rx="1" fill="currentColor" />
-      <rect x="10" y="8" width="4" height="12" rx="1" fill="currentColor" />
-      <rect x="16" y="4" width="4" height="16" rx="1" fill="currentColor" />
     </svg>
   );
 }
@@ -56,12 +47,12 @@ export default function HomeScreen() {
     setShowEditNicknameModal(false);
   };
 
-  const displayName = userName;
+  const displayName = userName.slice(0, MAX_NICKNAME_LENGTH);
+  const currentMonth = getCurrentMonth();
   const imageSrc = getLevelImage(monthlyAmount, viewMode);
-  const month = getCurrentMonth();
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen home-screen--hero">
       {showNicknameModal && (
         <NicknameModal
           mode="initial"
@@ -79,60 +70,87 @@ export default function HomeScreen() {
         />
       )}
 
-      <div className="home-screen__image-wrap" aria-hidden="true">
+      <div className="home-screen__image-wrap home-screen__image-wrap--offset" aria-hidden="true">
         <img src={imageSrc} alt="" className="home-screen__image" />
       </div>
 
       <header className="home-screen__header">
-        <div className="home-screen__header-actions">
-          <Button
-            type="button"
-            size="medium"
-            variant="weak"
-            color="dark"
-            className="home-screen__stats-btn"
-            onClick={() => navigate('/stats/monthly')}
-            aria-label="통계 보기"
-          >
-            <StatsIcon />
-          </Button>
-          <Button type="button" size="medium" variant="weak" color="dark" onClick={toggleViewMode}>
-            {viewMode === 'bill' ? '어항 모드' : '지폐 모드'}
-          </Button>
-        </div>
-
-        <div className="home-screen__copy">
-          <Paragraph.Text typography="t1" fontWeight="bold" className="home-screen__month">
-            {month}월
-          </Paragraph.Text>
-          <div className="home-screen__title">
-            <Paragraph.Text typography="t4" fontWeight="bold" className="home-screen__name-row">
-              <span>{displayName}님의</span>
-              {hasSetNickname && (
-                <button
-                  type="button"
-                  className="home-screen__edit-name"
-                  onClick={() => setShowEditNicknameModal(true)}
-                  aria-label="별명 수정"
-                >
-                  <PencilIcon />
-                </button>
-              )}
+        <div className="home-screen__summary">
+          <div className="home-screen__copy">
+            <Paragraph.Text typography="t5" fontWeight="semibold" className="home-screen__line home-screen__line--context">
+              <span className="home-screen__period">이번 달</span>
+              <span
+                className={`home-screen__name-group${hasSetNickname ? ' home-screen__name-group--editable' : ''}`}
+              >
+                <span className="home-screen__nickname">{displayName}</span>님의
+                {hasSetNickname && (
+                  <button
+                    type="button"
+                    className="home-screen__edit-name"
+                    onClick={() => setShowEditNicknameModal(true)}
+                    aria-label="별명 수정"
+                  >
+                    <PencilIcon />
+                  </button>
+                )}
+              </span>
             </Paragraph.Text>
-            <Paragraph.Text typography="t4" fontWeight="bold">
+            <Paragraph.Text typography="t5" fontWeight="bold" className="home-screen__line home-screen__line--lead">
               쓸까 말까 하다 안 쓴
             </Paragraph.Text>
-            <Paragraph.Text typography="t2" fontWeight="bold">
+          </div>
+          <div className="home-screen__amount-row">
+            <Paragraph.Text typography="t2" fontWeight="bold" className="home-screen__amount">
               {formatAmount(monthlyAmount)}원
             </Paragraph.Text>
+            <button
+              type="button"
+              className="home-screen__add-btn"
+              onClick={() => navigate('/record')}
+              aria-label="안 썼어요 기록하기"
+            >
+              +
+            </button>
           </div>
         </div>
       </header>
 
       <footer className="screen-bottom-footer home-screen__footer">
-        <Button display="full" size="xlarge" onClick={() => navigate('/record')}>
-          안 썼어요 기록하기
-        </Button>
+        <div className="home-screen__footer-actions">
+          <Button
+            type="button"
+            size="medium"
+            variant="weak"
+            color="dark"
+            display="full"
+            className="home-screen__footer-action-btn"
+            onClick={toggleViewMode}
+          >
+            {viewMode === 'bill' ? '어항모드' : '지폐모드'}
+          </Button>
+          <Button
+            type="button"
+            size="medium"
+            variant="weak"
+            color="dark"
+            display="full"
+            className="home-screen__footer-action-btn"
+            onClick={() => navigate('/stats/monthly')}
+          >
+            {currentMonth}월 통계
+          </Button>
+          <Button
+            type="button"
+            size="medium"
+            variant="weak"
+            color="dark"
+            display="full"
+            className="home-screen__footer-action-btn"
+            onClick={() => navigate('/stats/monthly-chart')}
+          >
+            월별 통계
+          </Button>
+        </div>
       </footer>
     </div>
   );

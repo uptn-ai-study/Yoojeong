@@ -4,7 +4,7 @@ import {
   BRAND_PRIMARY_COLOR,
 } from '../constants/brand';
 import {
-  applySafeAreaCssVars,
+  applySafeAreaCssVarsIfChanged,
   readBrowserSafeAreaInsets,
   resolveNativeSafeAreaInsets,
 } from '../utils/safeArea';
@@ -24,10 +24,8 @@ function installTossBridgeDevHandlers() {
     return;
   }
 
-  const browserInsets = readBrowserSafeAreaInsets();
-
   const devHandlers: ConstantHandlerMap = {
-    getSafeAreaInsets: () => browserInsets,
+    getSafeAreaInsets: () => readBrowserSafeAreaInsets(),
     brandPrimaryColor: () => BRAND_PRIMARY_COLOR,
     brandDisplayName: () => BRAND_DISPLAY_NAME,
     brandIcon: () => BRAND_ICON_LIGHT,
@@ -46,7 +44,11 @@ function installTossBridgeDevHandlers() {
 
 function syncInitialSafeArea() {
   const nativeInsets = resolveNativeSafeAreaInsets();
-  applySafeAreaCssVars(nativeInsets ?? readBrowserSafeAreaInsets());
+  if (nativeInsets) {
+    applySafeAreaCssVarsIfChanged(nativeInsets, 'native');
+    return;
+  }
+  applySafeAreaCssVarsIfChanged(readBrowserSafeAreaInsets(), 'browser');
 }
 
 installTossBridgeDevHandlers();

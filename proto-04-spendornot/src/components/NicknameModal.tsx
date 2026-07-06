@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Button, Paragraph, TextField } from '@toss/tds-mobile';
 import { useAppStore } from '../store/useAppStore';
+import { MAX_NICKNAME_LENGTH } from '../types';
 import './NicknameModal.css';
-
-const MAX_NICKNAME_LENGTH = 15;
 
 type NicknameModalMode = 'initial' | 'edit';
 
@@ -21,7 +20,7 @@ export default function NicknameModal({
   onCancel,
 }: NicknameModalProps) {
   const setUserName = useAppStore((s) => s.setUserName);
-  const [nickname, setNickname] = useState(initialValue);
+  const [nickname, setNickname] = useState(initialValue.slice(0, MAX_NICKNAME_LENGTH));
 
   const isEditMode = mode === 'edit';
 

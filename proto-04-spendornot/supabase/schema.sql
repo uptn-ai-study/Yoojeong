@@ -78,5 +78,10 @@ create policy "records_delete_own"
   on records for delete
   using (toss_user_key = public.request_toss_user_key());
 
+-- PostgREST(anon)가 RLS 정책을 타려면 테이블 권한이 필요합니다.
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.profiles to anon, authenticated;
+grant select, insert, update, delete on public.records to anon, authenticated;
+
 -- 참고: anon key + 헤더 기반 RLS는 개발·MVP용입니다.
 -- 정식 운영 시 토스 appLogin authorizationCode 검증 Edge Function + JWT 연동을 권장합니다.

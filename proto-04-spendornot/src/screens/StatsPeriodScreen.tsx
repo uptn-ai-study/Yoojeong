@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Button, Paragraph } from '@toss/tds-mobile';
+import { Paragraph } from '@toss/tds-mobile';
 import StatsQuickNav from '../components/StatsQuickNav';
 import ScreenHeader from '../components/ScreenHeader';
 import { BRAND_PRIMARY_COLOR } from '../constants/brand';
@@ -7,7 +7,7 @@ import { useAppStore } from '../store/useAppStore';
 import type { Category } from '../types';
 import { CATEGORIES } from '../types';
 import { formatAmount, getCurrentMonth } from '../utils/format';
-import { formatWeekRangeLabel } from '../utils/dateRange';
+import { formatTodayLabel, formatWeekRangeLabel } from '../utils/dateRange';
 import './StatsScreen.css';
 
 export type StatsPeriod = 'daily' | 'weekly' | 'monthly';
@@ -16,27 +16,28 @@ interface StatsPeriodScreenProps {
   period: StatsPeriod;
 }
 
-function getTitle(period: StatsPeriod): { line1: string; line2: string } {
-  const month = getCurrentMonth();
-
+function getTitle(period: StatsPeriod): string {
   if (period === 'daily') {
-    return {
-      line1: '오늘의 쓸까 말까 하다',
-      line2: '안 쓴 내역',
-    };
+    return '오늘의 쓸까 말까 하다 안 쓴 내역';
   }
 
   if (period === 'weekly') {
-    return {
-      line1: '이번 주의 쓸까 말까 하다',
-      line2: '안 쓴 내역',
-    };
+    return '이번 주의 쓸까 말까 하다 안 쓴 내역';
   }
 
-  return {
-    line1: `${month}월의 쓸까 말까 하다`,
-    line2: '안 쓴 내역',
-  };
+  return '이번 달의 쓸까 말까 하다 안 쓴 내역';
+}
+
+function getSubtitle(period: StatsPeriod): string {
+  if (period === 'daily') {
+    return formatTodayLabel();
+  }
+
+  if (period === 'weekly') {
+    return formatWeekRangeLabel();
+  }
+
+  return `${getCurrentMonth()}월`;
 }
 
 export default function StatsPeriodScreen({ period }: StatsPeriodScreenProps) {
@@ -47,7 +48,7 @@ export default function StatsPeriodScreen({ period }: StatsPeriodScreenProps) {
   const getMonthlyCategoryTotal = useAppStore((s) => s.getMonthlyCategoryTotal);
 
   const title = getTitle(period);
-  const weekRange = formatWeekRangeLabel();
+  const subtitle = getSubtitle(period);
 
   const total = period === 'daily' ? getDailyTotal() : getMonthlyTotal();
 
@@ -57,22 +58,16 @@ export default function StatsPeriodScreen({ period }: StatsPeriodScreenProps) {
   };
 
   return (
-    <div className="screen stats-screen screen-with-bottom-footer">
-      <div className="stats-screen__body screen-with-bottom-footer__body">
-        <header className="stats-screen__header">
-          <ScreenHeader
-            title={
-              <>
-                {title.line1}
-                <br />
-                {title.line2}
-              </>
-            }
-            subtitle={period === 'weekly' ? weekRange : undefined}
-            onBack={() => navigate('/home')}
-          />
-          <StatsQuickNav />
-        </header>
+    <div className="screen stats-screen">
+      <ScreenHeader
+        title={title}
+        titleFit
+        subtitle={subtitle}
+        onClose={() => navigate('/home')}
+      />
+
+      <div className="stats-screen__body">
+        <StatsQuickNav />
 
         <section className="stats-screen__total-card" style={{ backgroundColor: BRAND_PRIMARY_COLOR }}>
           <Paragraph.Text
@@ -103,12 +98,6 @@ export default function StatsPeriodScreen({ period }: StatsPeriodScreenProps) {
           </ul>
         </section>
       </div>
-
-      <footer className="screen-bottom-footer stats-screen__footer">
-        <Button display="full" size="xlarge" onClick={() => navigate('/stats/monthly-chart')}>
-          월별 통계
-        </Button>
-      </footer>
     </div>
   );
 }

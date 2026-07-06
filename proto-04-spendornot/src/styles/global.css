@@ -14,8 +14,8 @@
   --safe-area-right: env(safe-area-inset-right, 0px);
   /* TDS BottomCTA와 동일 — 네이티브·env·최소 여백 중 큰 값 */
   --app-safe-area-bottom: max(
-    var(--toss-safe-area-bottom, 0px),
-    env(safe-area-inset-bottom, 0px)
+    var(--toss-safe-area-bottom, 34px),
+    env(safe-area-inset-bottom, 34px)
   );
   /* 하단 CTA — safe area + 추가 lift, 기기별 최소값 보장 */
   --bottom-cta-safe-area: max(

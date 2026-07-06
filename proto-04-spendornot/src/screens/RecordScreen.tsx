@@ -31,7 +31,7 @@ export default function RecordScreen() {
 
   const showMemoInput = categoryHasMemo(category);
 
-  const close = () => navigate(-1);
+  const close = () => navigate('/home');
 
   const handleCategorySelect = (cat: Category) => {
     setCategory(cat);
@@ -72,7 +72,7 @@ export default function RecordScreen() {
 
   return (
     <div className="screen record-screen screen-with-bottom-footer">
-      <ScreenHeader title={formatRecordDateTitle(today)} onBack={close} />
+      <ScreenHeader title={formatRecordDateTitle(today)} onClose={close} />
 
       <main className="record-screen__body screen-with-bottom-footer__body">
         <section className="record-screen__section">
@@ -158,22 +158,17 @@ export default function RecordScreen() {
 
       <footer className="screen-bottom-footer screen-bottom-footer--bordered record-screen__footer">
         <Paragraph.Text typography="t7" color="adaptive-grey-600" className="record-screen__hint">
-          기록은 오늘만 가능해요.
+          오늘 일자 기록은 오늘까지 기록 수정할 수 있습니다.
         </Paragraph.Text>
-        <div className="screen-bottom-footer__actions record-screen__footer-actions">
-          <Button size="xlarge" variant="weak" color="dark" display="full" onClick={close}>
-            취소
-          </Button>
-          <Button
-            size="xlarge"
-            color="primary"
-            display="full"
-            disabled={!canSave}
-            onClick={handleSave}
-          >
-            저장하기
-          </Button>
-        </div>
+        <Button
+          size="xlarge"
+          color="primary"
+          display="full"
+          disabled={!canSave}
+          onClick={handleSave}
+        >
+          저장하기
+        </Button>
       </footer>
     </div>
   );

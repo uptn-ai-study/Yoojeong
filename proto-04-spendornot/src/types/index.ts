@@ -20,6 +20,8 @@ export const MEMO_CATEGORIES: Category[] = ['쇼핑', '기타'];
 
 export const MAX_MEMO_LENGTH = 50;
 
+export const MAX_NICKNAME_LENGTH = 10;
+
 export function categoryHasMemo(category: Category | null): boolean {
   return category === '쇼핑' || category === '기타';
 }

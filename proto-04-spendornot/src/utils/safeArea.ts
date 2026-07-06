@@ -7,6 +7,13 @@ export interface SafeAreaInsets {
   right: number;
 }
 
+/** iOS 홈 인디케이터 기본값 — env()/native 미제공 시 폴백 */
+const MOBILE_BOTTOM_INSET_FALLBACK_PX = 34;
+
+let lastAppliedInsetsKey = '';
+let nativeSafeAreaAvailable = false;
+let peakNativeBottomInset = 0;
+
 function readEnvInset(property: string): number {
   if (typeof document === 'undefined') {
     return 0;
@@ -31,6 +38,44 @@ export function readBrowserSafeAreaInsets(): SafeAreaInsets {
   };
 }
 
+export function isNativeSafeAreaAvailable(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const w = window as Window & {
+    __GRANITE_NATIVE_EMITTER?: unknown;
+    ReactNativeWebView?: unknown;
+  };
+
+  // dev polyfill은 get()만 가능하고 subscribe는 __GRANITE_NATIVE_EMITTER가 필요합니다.
+  if (!w.__GRANITE_NATIVE_EMITTER && !w.ReactNativeWebView) {
+    return false;
+  }
+
+  try {
+    TossSafeAreaInsets.get();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function clearSafeAreaInsetsCache(): void {
+  lastAppliedInsetsKey = '';
+}
+
+function normalizeInsets(insets: SafeAreaInsets, source: 'native' | 'browser'): SafeAreaInsets {
+  if (source === 'native') {
+    peakNativeBottomInset = Math.max(peakNativeBottomInset, insets.bottom);
+    return insets;
+  }
+
+  // 토스 웹뷰 재진입 시 env()가 0으로 떨어져 native 값을 덮어쓰지 않도록 보호
+  const bottom = Math.max(insets.bottom, peakNativeBottomInset);
+  return { ...insets, bottom };
+}
+
 export function applySafeAreaCssVars(insets: SafeAreaInsets) {
   if (typeof document === 'undefined') {
     return;
@@ -49,22 +94,31 @@ export function applySafeAreaCssVars(insets: SafeAreaInsets) {
   }
 }
 
-let lastAppliedInsetsKey = '';
-
-export function applySafeAreaCssVarsIfChanged(insets: SafeAreaInsets) {
-  const nextKey = `${insets.top}:${insets.bottom}:${insets.left}:${insets.right}`;
+export function applySafeAreaCssVarsIfChanged(
+  insets: SafeAreaInsets,
+  source: 'native' | 'browser' = 'native',
+) {
+  const normalized = normalizeInsets(insets, source);
+  const nextKey = `${normalized.top}:${normalized.bottom}:${normalized.left}:${normalized.right}:${source}`;
   if (nextKey === lastAppliedInsetsKey) {
     return;
   }
 
   lastAppliedInsetsKey = nextKey;
-  applySafeAreaCssVars(insets);
+  applySafeAreaCssVars(normalized);
 }
 
 export function resolveNativeSafeAreaInsets(): SafeAreaInsets | null {
   try {
+    nativeSafeAreaAvailable = true;
     return TossSafeAreaInsets.get();
   } catch {
     return null;
   }
 }
+
+export function shouldUseBrowserSafeAreaFallback(): boolean {
+  return !nativeSafeAreaAvailable && !isNativeSafeAreaAvailable();
+}
+
+export { MOBILE_BOTTOM_INSET_FALLBACK_PX };

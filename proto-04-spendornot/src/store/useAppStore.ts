@@ -11,6 +11,7 @@ import {
   upsertCloudRecords,
 } from '../services/supabaseData';
 import type { Category, MonthlyStat, Record, ViewMode } from '../types';
+import { MAX_NICKNAME_LENGTH } from '../types';
 import { isSameDay, isSameWeek } from '../utils/dateRange';
 import { isSameMonth } from '../utils/format';
 import { JUNE_TEST_RECORDS } from '../data/juneTestRecords';
@@ -125,7 +126,8 @@ export const useAppStore = create<AppState>()(
       },
 
       setUserName: (name) => {
-        set({ user: { name }, hasSetNickname: true });
+        const trimmed = name.trim().slice(0, MAX_NICKNAME_LENGTH);
+        set({ user: { name: trimmed }, hasSetNickname: true });
         void syncProfile(get()).catch((error: unknown) => {
           set({ syncError: error instanceof Error ? error.message : '프로필 동기화에 실패했습니다.' });
         });

@@ -1,31 +1,9 @@
-.monthly-chart-screen {
-  min-height: 100dvh;
-  padding: 16px 0 calc(24px + var(--bottom-cta-safe-padding));
-}
-
-.monthly-chart-screen__summary {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 20px;
-  border-radius: 16px;
-  margin-bottom: 28px;
-}
-
-.monthly-chart-screen__summary-label,
-.monthly-chart-screen__summary-amount {
-  display: block;
-  width: 100%;
-  text-align: right;
-}
-
 .monthly-chart-screen__empty {
-  padding: 48px 16px;
+  padding: 48px 0;
   text-align: center;
 }
 
 .monthly-chart-screen__chart {
-  padding: 20px 0;
   border-radius: 16px;
   border: 1px solid var(--color-border);
   background: var(--color-surface);

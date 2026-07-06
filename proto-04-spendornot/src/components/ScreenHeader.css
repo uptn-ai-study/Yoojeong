@@ -22,4 +22,37 @@
   flex-direction: column;
   justify-content: center;
   gap: 4px;
+  container-type: inline-size;
+}
+
+.screen-header__title-fit {
+  display: block;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+  font-size: clamp(15px, 7.8cqi, 1em) !important;
+}
+
+.screen-header__row--close .screen-header__text {
+  padding-right: 8px;
+}
+
+.screen-header__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  margin: -8px -8px -8px 0;
+  padding: 0;
+  border: none;
+  border-radius: 12px;
+  color: var(--color-text, #191f28);
+  background: transparent;
+  cursor: pointer;
+}
+
+.screen-header__close:active {
+  background: rgba(0, 0, 0, 0.04);
 }

@@ -40,3 +40,7 @@ export function formatWeekRangeLabel(reference = new Date()): string {
   const endLabel = `${end.getMonth() + 1}월 ${end.getDate()}일`;
   return `${startLabel} ~ ${endLabel}`;
 }
+
+export function formatTodayLabel(reference = new Date()): string {
+  return `${reference.getMonth() + 1}월 ${reference.getDate()}일`;
+}

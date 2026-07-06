@@ -1,33 +1,65 @@
 import { useLayoutEffect } from 'react';
 import { SafeAreaInsets } from '@apps-in-toss/web-framework';
-import { applySafeAreaCssVarsIfChanged, readBrowserSafeAreaInsets } from '../utils/safeArea';
+import {
+  applySafeAreaCssVarsIfChanged,
+  clearSafeAreaInsetsCache,
+  isNativeSafeAreaAvailable,
+  readBrowserSafeAreaInsets,
+} from '../utils/safeArea';
 
 export default function SafeAreaSync() {
   useLayoutEffect(() => {
     let cleanupNative: (() => void) | undefined;
+    let useNativeSafeArea = false;
 
     try {
-      applySafeAreaCssVarsIfChanged(SafeAreaInsets.get());
+      clearSafeAreaInsetsCache();
+      applySafeAreaCssVarsIfChanged(SafeAreaInsets.get(), 'native');
       cleanupNative = SafeAreaInsets.subscribe({
-        onEvent: (insets) => applySafeAreaCssVarsIfChanged(insets),
+        onEvent: (insets) => applySafeAreaCssVarsIfChanged(insets, 'native'),
       });
+      useNativeSafeArea = true;
     } catch {
-      applySafeAreaCssVarsIfChanged(readBrowserSafeAreaInsets());
+      clearSafeAreaInsetsCache();
+      applySafeAreaCssVarsIfChanged(readBrowserSafeAreaInsets(), 'browser');
     }
 
-    const syncBrowserInsets = () => {
-      applySafeAreaCssVarsIfChanged(readBrowserSafeAreaInsets());
+    const syncNativeInsets = () => {
+      if (!useNativeSafeArea && !isNativeSafeAreaAvailable()) {
+        applySafeAreaCssVarsIfChanged(readBrowserSafeAreaInsets(), 'browser');
+        return;
+      }
+
+      try {
+        clearSafeAreaInsetsCache();
+        applySafeAreaCssVarsIfChanged(SafeAreaInsets.get(), 'native');
+      } catch {
+        applySafeAreaCssVarsIfChanged(readBrowserSafeAreaInsets(), 'browser');
+      }
     };
 
-    window.addEventListener('resize', syncBrowserInsets);
-    window.addEventListener('orientationchange', syncBrowserInsets);
-    window.visualViewport?.addEventListener('resize', syncBrowserInsets);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncNativeInsets();
+      }
+    };
+
+    window.addEventListener('pageshow', syncNativeInsets);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('orientationchange', syncNativeInsets);
+    window.visualViewport?.addEventListener('resize', syncNativeInsets);
+
+    if (!useNativeSafeArea) {
+      window.addEventListener('resize', syncNativeInsets);
+    }
 
     return () => {
       cleanupNative?.();
-      window.removeEventListener('resize', syncBrowserInsets);
-      window.removeEventListener('orientationchange', syncBrowserInsets);
-      window.visualViewport?.removeEventListener('resize', syncBrowserInsets);
+      window.removeEventListener('pageshow', syncNativeInsets);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('orientationchange', syncNativeInsets);
+      window.visualViewport?.removeEventListener('resize', syncNativeInsets);
+      window.removeEventListener('resize', syncNativeInsets);
     };
   }, []);
 
