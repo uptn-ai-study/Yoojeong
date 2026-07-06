@@ -22,13 +22,32 @@
 
 .home-screen__image-wrap--offset {
   top: clamp(120px, 20vh, 200px);
-  bottom: calc(12px + var(--safe-area-bottom));
+  bottom: 0;
+}
+
+.home-screen--hero {
+  /* 700px 이하: 여백 없음 → 0. 820px 이상: 여백 대응 → 1 */
+  --home-bottom-fade-strength: clamp(0, calc((100dvh - 700px) / 1px / 120), 1);
+  --home-bottom-fade-height: clamp(72px, 14dvh, 120px);
+  --home-bottom-mask-fade: calc(var(--home-bottom-fade-strength) * 16%);
 }
 
 .home-screen__image-wrap--offset .home-screen__image {
   object-position: center 28%;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 100%);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 20%,
+    #000 calc(100% - var(--home-bottom-mask-fade)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 20%,
+    #000 calc(100% - var(--home-bottom-mask-fade)),
+    transparent 100%
+  );
 }
 
 .home-screen--hero::before {
@@ -45,6 +64,27 @@
     var(--color-surface) 0%,
     var(--color-surface) 38%,
     rgba(255, 255, 255, 0.78) 58%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+.home-screen--hero::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(
+    var(--home-bottom-fade-strength) * (var(--home-bottom-fade-height) + var(--safe-area-bottom))
+  );
+  z-index: 1;
+  pointer-events: none;
+  opacity: var(--home-bottom-fade-strength);
+  background: linear-gradient(
+    0deg,
+    var(--color-surface) 0%,
+    var(--color-surface) 24%,
+    rgba(255, 255, 255, 0.78) 52%,
     rgba(255, 255, 255, 0) 100%
   );
 }
