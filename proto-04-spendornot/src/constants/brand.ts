@@ -1,5 +1,5 @@
 export const BRAND_PRIMARY_COLOR = '#606C5E';
-export const BRAND_DISPLAY_NAME = '쓸까말까';
+export const BRAND_DISPLAY_NAME = '쓸까말까 기록일지';
 
 /** 앱인토스 콘솔 — 라이트 모드 로고 */
 export const BRAND_ICON_LIGHT =

@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { isSupabaseConfigured } from '../lib/supabase';
+import { isSupabaseConfigured, resetSupabaseClient } from '../lib/supabase';
 import { resolveTossUserKey } from '../lib/tossUser';
 import {
   deleteCloudRecord,
   fetchCloudProfile,
   fetchCloudRecords,
+  resetCloudUserData,
   upsertCloudProfile,
   upsertCloudRecord,
   upsertCloudRecords,
@@ -42,6 +43,7 @@ interface AppState {
   addRecord: (date: string, category: Category, amount: number, memo?: string) => void;
   deleteRecord: (id: string) => void;
   seedJuneTestData: () => void;
+  resetAppData: () => Promise<void>;
   initializeFromCloud: () => Promise<void>;
   getTotalAmount: () => number;
   getTotalCategoryTotal: (category: Category) => number;
@@ -190,6 +192,40 @@ export const useAppStore = create<AppState>()(
         })().catch((error: unknown) => {
           set({ syncError: error instanceof Error ? error.message : '테스트 데이터 동기화에 실패했습니다.' });
         });
+      },
+
+      resetAppData: async () => {
+        cloudInitPromise = null;
+
+        const { isCloudEnabled, tossUserKey: storedKey } = get();
+        let tossUserKey = storedKey;
+
+        try {
+          if (!tossUserKey) {
+            tossUserKey = await resolveTossUserKey();
+          }
+
+          if (isCloudEnabled && tossUserKey) {
+            await resetCloudUserData(tossUserKey);
+          }
+        } catch (error) {
+          set({
+            syncError: error instanceof Error ? error.message : '데이터 초기화에 실패했습니다.',
+          });
+        } finally {
+          resetSupabaseClient();
+          localStorage.removeItem('spendornot-storage');
+          localStorage.removeItem('spendornot-dev-toss-user-key');
+          set({
+            user: { name: '' },
+            records: [],
+            hasSetNickname: false,
+            hasSeenIntro: false,
+            tossUserKey: null,
+            isCloudReady: true,
+            syncError: null,
+          });
+        }
       },
 
       initializeFromCloud: async () => {

@@ -123,3 +123,23 @@ export async function deleteCloudRecord(tossUserKey: string, id: string): Promis
 
   if (error) throw error;
 }
+
+export async function resetCloudUserData(tossUserKey: string): Promise<void> {
+  const supabase = getSupabaseClient(tossUserKey);
+  const { error: recordsError } = await supabase.from('records').delete().neq('id', '');
+
+  if (recordsError) throw recordsError;
+
+  const { error: profileError } = await supabase.from('profiles').upsert(
+    {
+      toss_user_key: tossUserKey,
+      nickname: '',
+      view_mode: 'bill',
+      has_seen_intro: false,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'toss_user_key' },
+  );
+
+  if (profileError) throw profileError;
+}

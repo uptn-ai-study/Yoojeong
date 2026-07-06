@@ -9,6 +9,7 @@ import {
 /**
  * 앱인토스 콘솔 등록 정보와 동일하게 유지해 주세요.
  * - appName: 콘솔 앱 ID (intoss://{appName})
+ * - brand.displayName: 콘솔 앱 표시명 · 상단 타이틀 (현재: 쓸까말까 기록일지)
  * - brand.icon: 라이트 모드 로고 URL (번들·네이티브 브랜딩에 사용)
  * - brand.iconDark: 다크 모드 로고 URL (콘솔 등록용 — 콘솔·문서 기준)
  */

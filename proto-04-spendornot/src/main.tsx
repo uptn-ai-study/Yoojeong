@@ -3,7 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { TDSMobileAITProvider } from '@toss/tds-mobile-ait';
 import SafeAreaSync from './components/SafeAreaSync';
-import CloudSyncBootstrap from './components/CloudSyncBootstrap';
+import CloudSyncBootstrap, { markAppResetPending } from './components/CloudSyncBootstrap';
 import App from './App';
 import { useAppStore } from './store/useAppStore';
 import { isSupabaseConfigured } from './lib/supabase';
@@ -13,6 +13,7 @@ import './styles/global.css';
 if (new URLSearchParams(window.location.search).get('reset') === '1') {
   localStorage.removeItem('spendornot-storage');
   localStorage.removeItem('spendornot-dev-toss-user-key');
+  markAppResetPending();
   window.history.replaceState({}, '', window.location.pathname);
 }
 

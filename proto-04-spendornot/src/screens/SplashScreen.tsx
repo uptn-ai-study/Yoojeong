@@ -8,14 +8,14 @@ export default function SplashScreen() {
         <div className="splash-screen__headline">
           <img
             src="/images/app-icon.webp"
-            alt="쓸까말까"
+            alt="쓸까말까 기록일지"
             className="splash-screen__icon"
             width={128}
             height={128}
             decoding="async"
           />
           <Paragraph.Text typography="t1" fontWeight="semibold" className="splash-screen__subtitle">
-            기록일지
+            쓸까말까 기록일지
           </Paragraph.Text>
         </div>
         <Paragraph.Text typography="t6" color="adaptive-grey-600" className="splash-screen__credit">
