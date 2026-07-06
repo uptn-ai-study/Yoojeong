@@ -1,9 +1,10 @@
 .record-screen {
-  padding: 16px 0 0;
+  padding: 0;
 }
 
 .record-screen > .screen-header {
   flex-shrink: 0;
+  padding-top: 16px;
 }
 
 .record-screen__body {
@@ -43,8 +44,19 @@
   text-align: center;
 }
 
-.record-screen__footer {
+.record-screen__footer.screen-bottom-footer {
+  padding: 0;
+}
+
+.record-screen__footer.screen-bottom-footer::after {
+  height: max(40px, var(--screen-bottom-safe-inset));
+  min-height: 40px;
+}
+
+.record-screen__footer-content {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 12px var(--screen-padding-right) clamp(32px, 5.5dvh, 44px)
+    var(--screen-padding-left);
 }

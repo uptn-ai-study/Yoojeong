@@ -9,23 +9,22 @@
   --font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
     'Noto Sans KR', sans-serif;
   --safe-area-top: env(safe-area-inset-top, 0px);
-  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-left: env(safe-area-inset-left, 0px);
   --safe-area-right: env(safe-area-inset-right, 0px);
-  /* TDS BottomCTA와 동일 — 네이티브·env·최소 여백 중 큰 값 */
-  --app-safe-area-bottom: max(
-    var(--toss-safe-area-bottom, 34px),
-    env(safe-area-inset-bottom, 34px)
+  /* 네이티브/env가 0이어도 홈 인디케이터 여백 최소 34px 보장 */
+  --screen-bottom-safe-inset: max(
+    env(safe-area-inset-bottom, 0px),
+    var(--toss-safe-area-bottom, 0px),
+    34px
   );
-  /* 하단 CTA — safe area + 추가 lift, 기기별 최소값 보장 */
-  --bottom-cta-safe-area: max(
-    var(--app-safe-area-bottom),
-    env(safe-area-inset-bottom, 0px)
-  );
-  --bottom-cta-extra-lift: clamp(40px, 6dvh, 64px);
-  --bottom-cta-min-total: 88px;
+  --safe-area-bottom: var(--screen-bottom-safe-inset);
+  --app-safe-area-bottom: var(--screen-bottom-safe-inset);
+  /* 하단 CTA — safe area + 추가 lift */
+  --bottom-cta-safe-area: var(--screen-bottom-safe-inset);
+  --bottom-cta-extra-lift: clamp(32px, 5.5dvh, 52px);
+  --bottom-cta-min-total: 96px;
   --bottom-cta-safe-padding: max(
-    calc(var(--bottom-cta-safe-area) + var(--bottom-cta-extra-lift)),
+    calc(var(--screen-bottom-safe-inset) + var(--bottom-cta-extra-lift)),
     var(--bottom-cta-min-total)
   );
   /* iPhone·Android 공통 — 좁은 화면 24px, 넓은 화면까지 점진 확대 + 노치 safe area */
@@ -89,9 +88,16 @@ a {
 
 /* 하단 액션 — flex 푸터 (토스 웹뷰에서 fixed CTA보다 안정적) */
 .screen-with-bottom-footer {
-  height: 100dvh;
-  max-height: 100dvh;
+  height: 100vh;
+  max-height: 100vh;
   overflow: hidden;
+}
+
+@supports (height: 100svh) {
+  .screen-with-bottom-footer {
+    height: 100svh;
+    max-height: 100svh;
+  }
 }
 
 .screen-with-bottom-footer__body {
@@ -104,8 +110,17 @@ a {
 
 .screen-bottom-footer {
   flex-shrink: 0;
-  padding: 12px var(--screen-padding-right) var(--bottom-cta-safe-padding)
+  padding: 12px var(--screen-padding-right) var(--bottom-cta-extra-lift)
     var(--screen-padding-left);
+}
+
+.screen-bottom-footer::after {
+  content: '';
+  display: block;
+  flex-shrink: 0;
+  width: 100%;
+  height: var(--screen-bottom-safe-inset);
+  min-height: 34px;
 }
 
 .screen-bottom-footer--bordered {

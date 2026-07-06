@@ -66,13 +66,15 @@ export function clearSafeAreaInsetsCache(): void {
 }
 
 function normalizeInsets(insets: SafeAreaInsets, source: 'native' | 'browser'): SafeAreaInsets {
+  const bottomWithFloor = Math.max(insets.bottom, MOBILE_BOTTOM_INSET_FALLBACK_PX);
+
   if (source === 'native') {
-    peakNativeBottomInset = Math.max(peakNativeBottomInset, insets.bottom);
-    return insets;
+    peakNativeBottomInset = Math.max(peakNativeBottomInset, bottomWithFloor);
+    return { ...insets, bottom: bottomWithFloor };
   }
 
   // 토스 웹뷰 재진입 시 env()가 0으로 떨어져 native 값을 덮어쓰지 않도록 보호
-  const bottom = Math.max(insets.bottom, peakNativeBottomInset);
+  const bottom = Math.max(bottomWithFloor, peakNativeBottomInset);
   return { ...insets, bottom };
 }
 

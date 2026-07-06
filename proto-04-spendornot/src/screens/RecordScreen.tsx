@@ -157,18 +157,20 @@ export default function RecordScreen() {
       </main>
 
       <footer className="screen-bottom-footer screen-bottom-footer--bordered record-screen__footer">
-        <Paragraph.Text typography="t7" color="adaptive-grey-600" className="record-screen__hint">
-          오늘 일자 기록은 오늘까지 기록 수정할 수 있습니다.
-        </Paragraph.Text>
-        <Button
-          size="xlarge"
-          color="primary"
-          display="full"
-          disabled={!canSave}
-          onClick={handleSave}
-        >
-          저장하기
-        </Button>
+        <div className="record-screen__footer-content">
+          <Paragraph.Text typography="t7" color="adaptive-grey-600" className="record-screen__hint">
+            오늘 일자 기록은 오늘까지 기록 수정할 수 있습니다.
+          </Paragraph.Text>
+          <Button
+            size="xlarge"
+            color="primary"
+            display="full"
+            disabled={!canSave}
+            onClick={handleSave}
+          >
+            저장하기
+          </Button>
+        </div>
       </footer>
     </div>
   );
